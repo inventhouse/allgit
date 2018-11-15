@@ -14,7 +14,7 @@ fi
 
 Status=`git status -s`
 if [ "$Status" ]; then
-  echo "You have local changes that would get rolled up in the squash; commit changes you want or stash changes you don't"
+  echo "This cannot distinguish between changes to be squashed and local or untracked changes; commit changes you want or stash changes you don't"
   echo "$Status"
   exit 1
 fi
