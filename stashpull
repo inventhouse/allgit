@@ -1,0 +1,23 @@
+#!/bin/bash
+
+# Simple hack to pull all git repos in a directory
+# Copyright (c) 2018 Benjamin Holt -- MIT License
+
+if [ "$1" == "-h" -o "$1" == "--help" ]; then
+    cat <<USAGE
+usage: stashpull [REPO]     Stashes changes and pulls (with rebase) REPO, then
+                            pops the stashed changes back.
+       stashpull -h|--help  Print this message and exit
+USAGE
+    exit 0
+fi
+
+pushd "${1:-.}" >> /dev/null
+
+git stash
+git pull -r
+git stash pop
+
+popd >> /dev/null
+
+###

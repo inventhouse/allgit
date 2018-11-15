@@ -1,0 +1,27 @@
+#!/bin/bash
+
+# Simple hack to pull all git repos in a directory
+# Copyright (c) 2018 Benjamin Holt -- MIT License
+
+if [ "$1" == "-h" -o "$1" == "--help" ]; then
+    cat <<USAGE
+usage: squashall [PARENT]     Squash all changes on the current branch; PARENT
+                              defaults to "master"
+       squashall -h|--help    Print this message and exit
+USAGE
+    exit 0
+fi
+
+Status=`git status -s`
+if [ "$Status" ]; then
+  echo "You have local changes that would get rolled up in the squash; commit changes you want or stash changes you don't"
+  echo "$Status"
+  exit 1
+fi
+
+Parent="${1:-master}"
+git reset $(git merge-base "$Parent" $(git rev-parse --abbrev-ref HEAD))
+git add -A
+git status
+echo "Now git commit with a message for the single commit and force-push"
+###
