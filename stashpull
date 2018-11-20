@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Simple hack to pull all git repos in a directory
+# For a git repo, stash changes, pull with rebase, and pop the stashed changes back
 # Copyright (c) 2018 Benjamin Holt -- MIT License
 
 if [ "$1" == "-h" -o "$1" == "--help" ]; then
