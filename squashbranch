@@ -5,14 +5,14 @@
 
 if [ "$1" == "-h" -o "$1" == "--help" ]; then
     cat <<USAGE
-usage: squashall [PARENT]     Squash all changes on the current branch; PARENT
-                              defaults to "master".  Current branch must have
-                              clean status so local changes don't get scooped
-                              up in the squash.  To undo the squash prior to
-                              committing:
-                              $ git reset --hard && git pull
+usage: squashbranch [PARENT]   Squash all changes on the current branch; PARENT
+                               defaults to "master".  Current branch must have
+                               clean status so local changes don't get scooped
+                               up in the squash.  To undo the squash prior to
+                               committing:
+                               $ git reset --hard && git pull
 
-       squashall -h|--help    Print this message and exit
+       squashbranch -h|--help  Print this message and exit
 USAGE
     exit 0
 fi
