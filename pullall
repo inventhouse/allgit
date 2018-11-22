@@ -14,15 +14,15 @@ fi
 
 pushd "${1:-.}" >> /dev/null
 for Repo in */.git; do
-    Work="${Repo%/.git}"
-    if [ "$Work" == "*" ]; then
-	echo "pullall: no git repos found" >&2
-	popd >> /dev/null
-	exit 1
-    fi
-    echo "--  $Work  --"
-    git -C "$Work" pull --rebase
-    echo
+  Work="${Repo%/.git}"
+  if [ "$Work" == "*" ]; then
+    echo "pullall: no git repos found" >&2
+    popd >> /dev/null
+    exit 1
+  fi
+  echo "--  $Work  --"
+  git -C "$Work" pull --rebase
+  echo
 done
 popd >> /dev/null
 
