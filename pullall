@@ -12,6 +12,8 @@ USAGE
     exit 0
 fi
 
+Errors=""
+
 pushd "${1:-.}" >> /dev/null
 for Repo in */.git; do
   Work="${Repo%/.git}"
@@ -21,9 +23,12 @@ for Repo in */.git; do
     exit 1
   fi
   echo "--  $Work  --"
-  git -C "$Work" pull --rebase
+  git -C "$Work" pull --rebase || Errors="$Errors $Work"
   echo
 done
 popd >> /dev/null
 
+if [ "$Errors" ]; then
+  echo "Errors:$Errors"
+fi
 ###
