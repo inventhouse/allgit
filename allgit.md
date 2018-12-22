@@ -31,24 +31,37 @@ To Do
   - PUNT: some git commands don't work on bare, do we need to handle those differently? - no, no "special knowledge" of git commands
   - Need a flag for "only bare"?
 
+- error handling / printing
+
 - branch workflow
   - easy create, rebase, squash, push, fix, rebase, squash, push, eventually delete
   - "global" branch?
 
+- -b/--branches to select repos with those branches
+  - checkout mode?  are those modes a good idea?
+    - is this a case for a separate script? - no, no clear way to pass branch information
+    - is this a case for {branch} format placeholder? - maybe, but that's a pain to type for how often it's useful
+    - are there other "modes" that make sense?
+
 - heirarchies
   - DONE: search for repos
+  - DONE: -d/--depth and -r/--recursive
+    - should recursive also imply "search for sub-repos"?
   - DONE: don't descend into git working repos
     - flag to search for subrepos
     - how does git cope with repos within repos?  (iirc, subrepo is simply "untracked")
+    - what about submodules?
 
 - format placeholders
-  - repo name
+  - PUNT: repo name? - no, can be extracted from dir
   - repo dir
-  - branch
-  - uuid? (never actually used that)
-  - repos list? (never actually used that)
+  - repo url? - can be extracted from repo, but I used it quite a bit... (but mostly as a crutch to not learn the git way...)
+  - branch?
+  - uuid? (seems useful, but never actually used that)
+  - repos list? (never actually used that, maybe a "just print repos" flag/mode would be better)
 
 - clone
+  - is a "clone mode" useful (or should script handle clone issues on its own?)
   - make script
     - clone script re-create heirarchies
   - auto-find github/gitlab repos for a given org/user/whatever?

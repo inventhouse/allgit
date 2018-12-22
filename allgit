@@ -25,17 +25,32 @@ def main(args, env):
         mine, cmd = split_args(args[1:], delim="--")
 
     usage = """\tWORK IN PROGRESS
-    \tallgit [options] [REPOS] - [git] SUBCOMMAND
-    \tallgit [options] [REPOS] -- ANY COMMAND
+    \tallgit [options] [DIR ...] - [git] SUBCOMMAND
+    \tallgit [options] [DIR ...] -- ANY COMMAND
     \tallgit -h/--help"""
     description = """WORK IN PROGRESS Run a git command in all repositories in the current directory (or those specified); can also run other scripts or commands.
     """
     parser = argparse.ArgumentParser(usage=usage, description=description, epilog="WORK IN PROGRESS")
     parser.add_argument(
-        "repos",
-        metavar="REPOS",
+        "dirs",
         nargs="*",
-        help="Specific git repositories to work on; non-repository items are skipped without error",
+        default=["."],
+        metavar="DIR",
+        help="Specific git repositories to work on or directories to search; defaults to the current directory.  Non-repository items are skipped without error and repositories are not searched for sub-repositories by default.",
+    )
+    parser.add_argument(
+        "-d", "--depth",
+        type=int,
+        default=1,
+        metavar="D",
+        help="Depth to searsh for repositories; defaults to 1, meaning repositories directly sepecified or immidiately children of DIR.",
+    )
+    parser.add_argument(
+        "-r", "--recursive",
+        dest="depth",
+        action="store_const",
+        const=-1,
+        help="Recursively search for repositories; synonym for --depth -1",
     )
     parser.add_argument(
         "--print-args",
@@ -43,10 +58,9 @@ def main(args, env):
         help="Print allgit arguments, command, and repos, then exit",
     )
     my_args = parser.parse_args(mine)
-    if my_args.repos:
-        repos = [ r for r in my_args.repos if is_repo(r) ]  # REM: eventually want to message on non-repos?
-    else:
-        repos = find_repos(".")  # FIXME: some way to pass in depth-to-search (and/or env var, rc, or somesuch)  # REM: some way to specify (or distinguish) "root" directories to search from explicit repos?
+    repos = []
+    for d in my_args.dirs:
+        repos.extend(find_repos(d, depth=my_args.depth))
 
     if my_args.print_args:
         print(f"* Args:\n\t{my_args}\n* Command:\n\t{cmd}\n* Repos:\n\t{repos}")
@@ -90,7 +104,7 @@ def find_repos(root, depth=1, subrepos=False):
             continue
 
         current_depth = len(PurePath(current).parts)
-        if depth and current_depth - start_depth >= depth:
+        if depth >= 0 and current_depth - start_depth >= depth:
             dirs[:] = []  # Don't descend any deeper
             continue
 
