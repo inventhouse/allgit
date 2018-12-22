@@ -1,0 +1,127 @@
+#!/usr/bin/env python3 -tt
+# Copyright (c) 2018 Benjamin Holt -- MIT License
+
+"""
+Lightweight tool to work with many git repos.
+"""
+import argparse
+import os
+import os.path
+from pathlib import PurePath
+import subprocess as sub  # FIXME: proper version check since sub.run is >=3.5?
+import sys
+#####
+
+
+###  Main  ###
+__version__ = '0.1'
+
+def main(args, env):
+    "Handle arguments, etc."
+    mine, cmd = split_args(args[1:], delim="-")  # Git command must be separated by '-'
+    if cmd and cmd[0] != "git":
+        cmd[0:0] = ["git"]
+    if not cmd:
+        mine, cmd = split_args(args[1:], delim="--")
+
+    usage = """\tWORK IN PROGRESS
+    \tallgit [options] [REPOS] - [git] SUBCOMMAND
+    \tallgit [options] [REPOS] -- ANY COMMAND
+    \tallgit -h/--help"""
+    description = """WORK IN PROGRESS Run a git command in all repositories in the current directory (or those specified); can also run other scripts or commands.
+    """
+    parser = argparse.ArgumentParser(usage=usage, description=description, epilog="WORK IN PROGRESS")
+    parser.add_argument(
+        "repos",
+        metavar="REPOS",
+        nargs="*",
+        help="Specific git repositories to work on; non-repository items are skipped without error",
+    )
+    parser.add_argument(
+        "--print-args",
+        action="store_true",
+        help="Print allgit arguments, command, and repos, then exit",
+    )
+    my_args = parser.parse_args(mine)
+    if my_args.repos:
+        repos = [ r for r in my_args.repos if is_repo(r) ]  # REM: eventually want to message on non-repos?
+    else:
+        repos = find_repos(".")  # FIXME: some way to pass in depth-to-search (and/or env var, rc, or somesuch)  # REM: some way to specify (or distinguish) "root" directories to search from explicit repos?
+
+    if my_args.print_args:
+        print(f"* Args:\n\t{my_args}\n* Command:\n\t{cmd}\n* Repos:\n\t{repos}")
+        return 0
+
+    if repos and cmd:
+        run_for(repos, cmd)
+    else:
+        print("Nevermind.")
+    return 0
+
+
+def split_args(args, delim="--"):  # REM: use '-' for git, '--' for any?  No auto-git, always delim.  Allow 'git' as delimiter?
+    if delim not in args:
+        return (args, None)
+
+    i = args.index(delim)
+    before = args[:i]
+    after = args[i + 1:]
+    return (before, after)
+
+
+def run_for(repos, cmd):
+    for r in repos:
+        print(f"=====  {r}  =====")
+        run(cmd, cwd=r, check=True)
+        print("")
+#####
+
+
+###  Repos  ###
+def find_repos(root, depth=1, subrepos=False):
+    "Find repos in a directory, limited to 'depth' levels"
+    start_depth = len(PurePath(root).parts)
+    repos = []
+    for current, dirs, files in os.walk(root):  # TODO: maybe 'in/exclude' pattern option?
+        is_bare_repo = current.endswith(".git")
+        if is_bare_repo or ".git" in dirs:
+            repos.append(current)
+            dirs[:] = [ d for d in dirs if subrepos and not is_bare_repo and d != ".git" ]  # If searching for subrepos, don't search bare repos or .git
+            continue
+
+        current_depth = len(PurePath(current).parts)
+        if depth and current_depth - start_depth >= depth:
+            dirs[:] = []  # Don't descend any deeper
+            continue
+
+    return repos
+
+
+def is_repo(d):
+    return d.endswith(".git") or os.path.exists(os.path.join(d, ".git"))
+#####
+
+
+###  Do command  ###
+def run(cmd, cwd=None, dry_run=False, verbose=False, prompt="$ ", **subargs):
+    if verbose:  # FIXME: proper logger instead of hacking my own quiet/verbose junk
+        print(prompt + " ".join(cmd))
+    if dry_run:
+        cmd[0:0] = ["echo"]
+    result = sub.run(cmd, cwd=cwd, stdout=sub.PIPE, stderr=sub.PIPE, universal_newlines=True, **subargs)
+    out_lines = result.stdout.splitlines()
+    # err_lines = result.stderr.splitlines()
+    if out_lines:
+        print("stdout:")
+        print("\n".join(out_lines))
+    # if err_lines:
+    #     print("\n".join(err_lines))
+    return (out_lines, result)
+#####
+
+
+#####
+if __name__ == "__main__":
+    _xit = main(sys.argv, os.environ)  # pylint: disable=invalid-name
+    sys.exit(_xit)
+#####
