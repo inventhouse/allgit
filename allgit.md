@@ -31,7 +31,7 @@ To Do
   - PUNT: some git commands don't work on bare, do we need to handle those differently? - no, no "special knowledge" of git commands
   - Need a flag for "only bare"?
 
-- error handling / printing
+- DONE: error handling / printing
 
 - branch workflow
   - easy create, rebase, squash, push, fix, rebase, squash, push, eventually delete
@@ -46,9 +46,9 @@ To Do
 - heirarchies
   - DONE: search for repos
   - DONE: -d/--depth and -r/--recursive
-    - should recursive also imply "search for sub-repos"?
+    - DONE: should recursive also imply "search for sub-repos"? - Yes
   - DONE: don't descend into git working repos
-    - flag to search for subrepos
+    - DONE: flag to search for subrepos
     - how does git cope with repos within repos?  (iirc, subrepo is simply "untracked")
     - what about submodules?
 

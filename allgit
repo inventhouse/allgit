@@ -36,7 +36,7 @@ def main(args, env):
         nargs="*",
         default=["."],
         metavar="DIR",
-        help="Specific git repositories to work on or directories to search; defaults to the current directory.  Non-repository items are skipped without error and repositories are not searched for sub-repositories by default.",
+        help="Specific git repositories to work on or directories to search; defaults to the current directory.  Non-repository items are silently skipped and repositories are not searched for sub-repositories by default.",
     )
     parser.add_argument(
         "-d", "--depth",
@@ -47,10 +47,13 @@ def main(args, env):
     )
     parser.add_argument(
         "-r", "--recursive",
-        dest="depth",
-        action="store_const",
-        const=-1,
-        help="Recursively search for repositories; synonym for --depth -1",
+        action="store_true",
+        help="Search for repositories to any depth; synonym for '--depth -1 --subrepos'",
+    )
+    parser.add_argument(
+        "-s", "--subrepos",
+        action="store_true",
+        help="Search git repositories for repositories cloned as subdirectories",
     )
     parser.add_argument(
         "--print-args",
@@ -58,9 +61,14 @@ def main(args, env):
         help="Print allgit arguments, command, and repos, then exit",
     )
     my_args = parser.parse_args(mine)
+
+    if my_args.recursive:
+        my_args.depth = -1
+        my_args.subrepos = True
+
     repos = []
     for d in my_args.dirs:
-        repos.extend(find_repos(d, depth=my_args.depth))
+        repos.extend(find_repos(d, depth=my_args.depth, subrepos=my_args.subrepos))
 
     if my_args.print_args:
         print(f"* Args:\n\t{my_args}\n* Command:\n\t{cmd}\n* Repos:\n\t{repos}")
