@@ -84,11 +84,19 @@ def split_args(args, delim="--"):  # REM: use '-' for git, '--' for any?  No aut
 
 
 def run_for(repos, cmd):
+    errors = []
     for r in repos:
-        print(f"=====  {r}  =====")
-        run(cmd, cwd=r, check=True)
+        print(f"-----  {r}  -----")
+        (_, result) = run(cmd, cwd=r)
+        if result.returncode != 0:
+            errors.append( (r, result) )
+            print(result.stderr)
         print("")
-#####
+    if errors:
+        print("ERRORS:")
+        for (repo, result) in errors:
+            print(f"\t{repo}:\n{result.stderr}")
+####
 
 
 ###  Repos  ###
@@ -124,12 +132,12 @@ def run(cmd, cwd=None, dry_run=False, verbose=False, prompt="$ ", **subargs):
         cmd[0:0] = ["echo"]
     result = sub.run(cmd, cwd=cwd, stdout=sub.PIPE, stderr=sub.PIPE, universal_newlines=True, **subargs)
     out_lines = result.stdout.splitlines()
-    # err_lines = result.stderr.splitlines()
     if out_lines:
-        print("stdout:")
+        if verbose:
+            print("stdout:")
         print("\n".join(out_lines))
-    # if err_lines:
-    #     print("\n".join(err_lines))
+    if verbose and result.stderr:
+        print(f"stderr:\n{result.stderr}")
     return (out_lines, result)
 #####
 
