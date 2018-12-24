@@ -26,6 +26,17 @@ fi
 
 Parent="${1:-master}"
 BranchName=`git rev-parse --abbrev-ref HEAD`
+
+if [ "$BranchName" == "master" ]; then
+  echo "Squashing the master branch is not generally a good idea" 1>&2
+  exit 1
+fi
+
+if [ "$Parent" == "$BranchName" ]; then
+  echo "Cannot squash $BranchName relative to itself" 1>&2
+  exit 1
+fi
+
 BranchPoint=`git merge-base "$Parent" "$BranchName"`
 BranchHashes=`git log "$BranchPoint..HEAD" --format=format:%h | tr "\n" " "`
 echo "----------------------------------------------------------------------"
