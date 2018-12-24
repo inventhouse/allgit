@@ -32,6 +32,7 @@ To Do
   - Need a flag for "only bare"?
 
 - DONE: error handling / printing
+  - Print if no repos were found
 
 - branch workflow
   - easy create, rebase, squash, push, fix, rebase, squash, push, eventually delete

@@ -3,32 +3,37 @@
 # Simple hack to pull all git repos in a directory
 # Copyright (c) 2018 Benjamin Holt -- MIT License
 
-if [ "$1" == "-h" -o "$1" == "--help" ]; then
-    cat <<USAGE
-usage: pullall [DIR]      Pulls (with rebase) all git repos immediately in DIR
-                          or the current directory
-       pullall -h|--help  Print this message and exit
-USAGE
-    exit 0
-fi
+allgit "${1:-.}" - pull -r
+echo "DEPRECATED: see 'allgit --help' for more information about the replacement"
 
-Errors=""
+# Old implementation follows:
 
-pushd "${1:-.}" >> /dev/null
-for Repo in */.git; do
-  Work="${Repo%/.git}"
-  if [ "$Work" == "*" ]; then
-    echo "pullall: no git repos found" >&2
-    popd >> /dev/null
-    exit 1
-  fi
-  echo "--  $Work  --"
-  git -C "$Work" pull --rebase || Errors="$Errors $Work"
-  echo
-done
-popd >> /dev/null
-
-if [ "$Errors" ]; then
-  echo "Errors:$Errors"
-fi
+# if [ "$1" == "-h" -o "$1" == "--help" ]; then
+#     cat <<USAGE
+# usage: pullall [DIR]      Pulls (with rebase) all git repos immediately in DIR
+#                           or the current directory
+#        pullall -h|--help  Print this message and exit
+# USAGE
+#     exit 0
+# fi
+#
+# Errors=""
+#
+# pushd "${1:-.}" >> /dev/null
+# for Repo in */.git; do
+#   Work="${Repo%/.git}"
+#   if [ "$Work" == "*" ]; then
+#     echo "pullall: no git repos found" >&2
+#     popd >> /dev/null
+#     exit 1
+#   fi
+#   echo "--  $Work  --"
+#   git -C "$Work" pull --rebase || Errors="$Errors $Work"
+#   echo
+# done
+# popd >> /dev/null
+#
+# if [ "$Errors" ]; then
+#   echo "Errors:$Errors"
+# fi
 ###
