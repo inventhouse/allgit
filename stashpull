@@ -14,9 +14,16 @@ fi
 
 pushd "${1:-.}" >> /dev/null
 
-git stash
-git pull -r
-git stash pop
+Status=`git status -s | egrep -v '^\?\?'`  # Untracked files, with status ??, don't get stashed; just look for "stashable" changes
+if [ "$Status" ]; then
+  git stash
+fi
+
+git pull --rebase=true
+
+if [ "$Status" ]; then
+  git stash pop
+fi
 
 popd >> /dev/null
 
