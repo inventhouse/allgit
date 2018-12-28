@@ -14,7 +14,7 @@ import sys
 
 
 ###  Main  ###
-__version__ = '0.1'
+__version__ = "0.1"
 
 def main(args, env):
     "Handle arguments, etc."
@@ -24,7 +24,7 @@ def main(args, env):
         cmd[0:0] = ["git"]  # ...and may omit "git" which feels redundant on the command line
     # Non-git command must be separated by '--', but doesn't get anything magically added
 
-    usage = """
+    usage = f"""                                                       v{__version__}
     \tallgit [options] [DIR ...] - [git] SUBCOMMAND
     \tallgit [options] [DIR ...] -- ANY COMMAND
     \tallgit -h/--help"""
@@ -59,6 +59,11 @@ def main(args, env):
         "--print-args",
         action="store_true",
         help="Print allgit arguments, command, and repos, then exit",
+    )
+    parser.add_argument(
+        '--version',
+        action='version',
+        version='%(prog)s v' + __version__,
     )
     my_args = parser.parse_args(mine)
 

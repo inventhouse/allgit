@@ -27,6 +27,7 @@ To Do
 - DONE: specified repos
   - DONE: split args
   - DONE: allow delimiters in the command-half (requires searching for all the delimiters, split on the first, and make note of which kind)
+- DONE: --version and version in help
 
 - DONE: handle bare repos from the start
   - PUNT: some git commands don't work on bare, do we need to handle those differently? - no, no "special knowledge" of git commands
