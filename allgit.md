@@ -12,7 +12,7 @@ Goals
 ### Non-goals
 - not a "front-end", doesn't replace git
 - no "smarts" about the commands it runs
-- adds yet another set of hacks onto the steaming pile that is git; sorry, I don't know how to fix git (yet)
+- alas, adds yet another set of hacks onto the steaming pile that is git; sorry, I don't know how to fix git (yet)
 
 
 Git Tricks
@@ -26,6 +26,7 @@ To Do
 - DONE: start with git op on current repos
 - DONE: specified repos
   - DONE: split args
+  - DONE: allow delimiters in the command-half (requires searching for all the delimiters, split on the first, and make note of which kind)
 
 - DONE: handle bare repos from the start
   - PUNT: some git commands don't work on bare, do we need to handle those differently? - no, no "special knowledge" of git commands

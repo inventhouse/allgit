@@ -19,11 +19,10 @@ __version__ = '0.1'
 def main(args, env):
     "Handle arguments, etc."
     # REM: Use '-' for git, '--' for any command.  No auto-git, always delim.  Allow 'git' as delimiter?
-    mine, cmd = split_args(args[1:], delim="-")  # Git command must be separated by '-'
-    if cmd and cmd[0] != "git":
-        cmd[0:0] = ["git"]
-    if not cmd:
-        mine, cmd = split_args(args[1:], delim="--")  # Non-git command must be separated by '--'  # FIXME: can't handle a command that uses bare '-'; split needs to use first-of-the-delimiters and return which was found
+    mine, delim, cmd = split_args(args[1:], delims=("-", "--"))
+    if cmd and delim == "-" and cmd[0] != "git":  # Git command must be separated by '-'...
+        cmd[0:0] = ["git"]  # ...and may omit "git" which feels redundant on the command line
+    # Non-git command must be separated by '--', but doesn't get anything magically added
 
     usage = """
     \tallgit [options] [DIR ...] - [git] SUBCOMMAND
@@ -83,15 +82,16 @@ def main(args, env):
     return xit
 
 
-def split_args(args, delim="--"):
-    "Splits the argument list on the delimiter"
-    if delim not in args:
-        return (args, None)
+def split_args(args, delims=("--",)):
+    "Splits the argument list on the first delimiter found; returns a tuple of the first arg list, that delimiter, and the second arg list"
+    indexes = { args.index(d): d for d in delims if d in args }
+    if not indexes:
+        return (args, None, None)
 
-    i = args.index(delim)
+    i = min(indexes.keys())
     before = args[:i]
     after = args[i + 1:]
-    return (before, after)
+    return (before, indexes[i], after)
 
 
 def run_for(repos, cmd):
