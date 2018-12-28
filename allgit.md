@@ -12,6 +12,7 @@ Goals
 ### Non-goals
 - not a "front-end", doesn't replace git
 - no "smarts" about the commands it runs
+  - but not *too* dogmatic either: optional 'git', magic format placeholders, ...
 - alas, adds yet another set of hacks onto the steaming pile that is git; sorry, I don't know how to fix git (yet)
 
 
@@ -35,6 +36,10 @@ To Do
 
 - DONE: error handling / printing
   - Print if no repos were found
+
+- add bold to some of allgit output (like repo names)
+- see if we can pass through git colors
+- 'parsable' output option?
 
 - branch workflow
   - easy create, rebase, squash, push, fix, rebase, squash, push, eventually delete
