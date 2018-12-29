@@ -46,10 +46,12 @@ To Do
   - "global" branch?
 
 - -b/--branches to select repos with those branches
-  - checkout mode?  are those modes a good idea?
-    - is this a case for a separate script? - no, no clear way to pass branch information
-    - is this a case for {branch} format placeholder? - maybe, but that's a pain to type for how often it's useful
+  - checkout mode
     - are there other "modes" that make sense?
+  - should this run other commands multiple times on repos with multiple matching branches?
+- -t/--tags - basically just like --branches but different mechanism
+    - should this have a checkout mode too?
+- -c/--changed
 
 - heirarchies
   - DONE: search for repos
@@ -63,19 +65,28 @@ To Do
 - format placeholders
   - PUNT: repo name? - no, can be extracted from dir
   - repo dir
-  - repo url? - can be extracted from repo, but I used it quite a bit... (but mostly as a crutch to not learn the git way...)
-  - branch?
+  - repo url - good for '--clone-script' workaround
+  - branch? - is that current branch or specified branch?  one of each?
   - uuid? (seems useful, but never actually used that)
   - repos list? (never actually used that, maybe a "just print repos" flag/mode would be better)
+  - could some / all of these be "passed" to scripts as env vars? - might make it easier to write "subcommands"
+    - sentinel var scripts could check for and print usage?
 
 - clone
-  - is a "clone mode" useful (or should script handle clone issues on its own?)
   - make script
+    - script should handle not cloning repos that already exist
     - clone script re-create heirarchies
   - auto-find github/gitlab repos for a given org/user/whatever?
     - list?
     - matching?
     - exclude?
+
+- defaults like origin and master?  other settings?
+  - "magic" tags?
+  - config settings?
+  - env vars?
+  - some combination or search path of the above?
+  - helpers to set or move settings?
 
 ### Doneyard
 
