@@ -45,13 +45,19 @@ To Do
   - easy create, rebase, squash, push, fix, rebase, squash, push, eventually delete
   - "global" branch?
 
-- -b/--branches to select repos with those branches
-  - checkout mode
-    - are there other "modes" that make sense?
-  - should this run other commands multiple times on repos with multiple matching branches?
+- DONE: -b/--branches to select repos with those branches
+  - NO: should this run other commands multiple times on repos with multiple matching branches?
+  - get remote names and strip exact prefixes for branch name normalization
 - -t/--tags - basically just like --branches but different mechanism
     - should this have a checkout mode too?
 - -c/--changed
+
+- -f/--fetch: do a fetch in all repos to ensure we have all branches and tags
+
+- checkout mode?
+  - are there other "modes" that make sense?
+  - maybe a --checkout?  getting awful close to actual subcommands
+  - checkout mode for tags too?
 
 - heirarchies
   - DONE: search for repos

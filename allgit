@@ -8,26 +8,27 @@ import argparse
 import os
 import os.path
 from pathlib import PurePath
+import re
 import subprocess as sub  # FIXME: proper version check since sub.run is >=3.5?
 import sys
 #####
 
 
 ###  Main  ###
-__version__ = "0.1"
+_name = "allgit"
+_version = "v0.2"
 
 def main(args, env):
     "Handle arguments, etc."
-    # REM: Use '-' for git, '--' for any command.  No auto-git, always delim.  Allow 'git' as delimiter?
     mine, delim, cmd = split_args(args[1:], delims=("-", "--"))
     if cmd and delim == "-" and cmd[0] != "git":  # Git command must be separated by '-'...
         cmd[0:0] = ["git"]  # ...and may omit "git" which feels redundant on the command line
     # Non-git command must be separated by '--', but doesn't get anything magically added
 
-    usage = f"""                                                       v{__version__}
-    \tallgit [options] [DIR ...] - [git] SUBCOMMAND
-    \tallgit [options] [DIR ...] -- ANY COMMAND
-    \tallgit -h/--help"""
+    usage = f"""                                                       {_version}
+    \t{_name} [options] [DIR ...] - [git] SUBCOMMAND
+    \t{_name} [options] [DIR ...] -- ANY COMMAND
+    \t{_name} -h/--help"""
     description = """Run a git command in all repositories in the current directory (or those specified); can also run other scripts or commands.
     """
     parser = argparse.ArgumentParser(usage=usage, description=description)
@@ -39,6 +40,12 @@ def main(args, env):
         help="Specific git repositories to work on or directories to search; defaults to the current directory.  Non-repository items are silently skipped and repositories are not searched for sub-repositories by default.",
     )
     parser.add_argument(
+        "-b", "--branches",
+        nargs="+",
+        metavar="B",
+        help="Only work on repositories which have at least one of these branches.",
+    )
+    parser.add_argument(
         "-d", "--depth",
         type=int,
         default=1,
@@ -48,22 +55,22 @@ def main(args, env):
     parser.add_argument(
         "-r", "--recursive",
         action="store_true",
-        help="Search for repositories to any depth; synonym for '--depth -1 --subrepos'",
+        help="Search for repositories to any depth; synonym for '--depth -1 --subrepos'.",
     )
     parser.add_argument(
         "-s", "--subrepos",
         action="store_true",
-        help="Search git repositories for repositories cloned as subdirectories",
+        help="Search git repositories for repositories cloned as subdirectories.",
     )
     parser.add_argument(
         "--print-args",
         action="store_true",
-        help="Print allgit arguments, command, and repos, then exit",
+        help="Print allgit arguments, command, and repos, then exit.",
     )
     parser.add_argument(
         '--version',
         action='version',
-        version='%(prog)s v' + __version__,
+        version='%(prog)s ' + _version,
     )
     my_args = parser.parse_args(mine)
 
@@ -71,19 +78,29 @@ def main(args, env):
         my_args.depth = -1
         my_args.subrepos = True
 
-    repos = []
+    found_repos = []
     for d in my_args.dirs:
-        repos.extend(find_repos(d, depth=my_args.depth, subrepos=my_args.subrepos))
+        found_repos.extend(find_repos(d, depth=my_args.depth, subrepos=my_args.subrepos))
+
+    repos = found_repos
+    if my_args.branches:  # REM: checkout mode will work rather differently
+        repos = [ r for r in found_repos if repo_branches(r, my_args.branches) ]
+
+    if not found_repos:
+        print("Warning: found no repositories")
+    elif not repos:
+        print(f"Warning: found {len(found_repos)} repositories but all were filtered out")
 
     if my_args.print_args:
-        print(f"* Args:\n\t{my_args}\n* Command:\n\t{cmd}\n* Repos:\n\t{repos}")
+        print(f"* Args:\n\t{my_args}\n* Command:\n\t{cmd}\n* Found Repos:\n\t{found_repos}")
+        if my_args.branches:
+            print(f"* Repos:\n\t{repos}")
         return 0
 
     xit = 0
     if repos and cmd:
         xit = run_for(repos, cmd)
-    else:
-        print("Nevermind.")
+    print("Done.")
     return xit
 
 
@@ -105,20 +122,20 @@ def run_for(repos, cmd):
     for r in repos:
         print(f"-----  {r}  -----")
         try:
-            (_, result) = run(cmd, cwd=r)
+            result = sub.run(cmd, cwd=r, stderr=sub.PIPE)  # Collect stderr so it can be printed at the end
         except FileNotFoundError as err:  # If the command is not found, this gets thrown instead of returning CP, so roll our own
             result = sub.CompletedProcess(cmd, returncode=err.errno, stderr=err.strerror)
 
         if result.returncode != 0:
             errors.append( (r, result) )
-            print(result.stderr)
+            print(result.stderr)  # REM: Should this go to our stderr?
         print("")
 
     xit = 0
     if errors:
         print("ERRORS:")
         for (repo, result) in errors:
-            print(f"\t{repo}:\n{result.stderr}")
+            print(f"\t{repo}:\n{result.stderr}")  # REM: Should this go to our stderr?
             xit = result.returncode  # Return the last error code 'cos pick one
     return xit
 ####
@@ -141,26 +158,38 @@ def find_repos(root, depth=1, subrepos=False):
             dirs[:] = []  # Don't descend any deeper
             continue
 
-    return repos
-#####
+    return sorted(repos)
 
 
-###  Do command  ###
-def run(cmd, cwd=None, dry_run=False, verbose=False, prompt="$ ", **subargs):
-    "Wraps running commands and capturing output, automatically splits lines from stdout"  # REM: do I really need this?  I'm not sure I do...
-    if verbose:  # FIXME: proper logger instead of hacking my own quiet/verbose junk
-        print(prompt + " ".join(cmd))
-    if dry_run:
-        cmd[0:0] = ["echo"]
-    result = sub.run(cmd, cwd=cwd, stdout=sub.PIPE, stderr=sub.PIPE, universal_newlines=True, **subargs)
-    out_lines = result.stdout.splitlines()
-    if out_lines:
-        if verbose:
-            print("stdout:")
-        print("\n".join(out_lines))
-    if verbose and result.stderr:
-        print(f"stderr:\n{result.stderr}")
-    return (out_lines, result)
+def branch_repos(branch_list, repos):
+    "Takes a list of branches and repos and returns a list of branches paired with lists of repos that have those branches"
+    # branches = {}
+    repo_branches_list = []
+    for r in repos:
+        repo_branches_list.append( (r, repo_branches(r, branch_list)) )
+
+    branch_repos = []
+    for b in branch_list:  # Invert the repo_branches_list
+        branch_repos.append( (b, [ r for r, bl in repo_branches_list if b in bl ]) )  # Branches and repos stay in requested order
+
+    return branch_repos
+
+
+# '* master'
+# '  remotes/origin/master'
+BRANCH_RE = re.compile(r"^\*?\s*(remotes/[^/]*/)?")  # Match the star-space or space-space and optional 'remotes/*/' prefix to be stripped from branch names; assumes remote names do not contain '/'  # REM: maybe we can get a list of actual remote names to work against
+def repo_branches(repo, branch_list=None):
+    "returns a list of branch names for repo; remote branches are reduced to their base name (stripped of remotes/origin/) and de-duped.  If a list of desired branches is provided, only those will be returned if they exist for the repo"  # FIXME: this description is a mess
+    branch_cmd = ["git", "branch", "--list", "--all",]
+    if branch_list:
+        branch_cmd.extend([ "*" + b for b in branch_list ])  # passing the list of branches to git pre-filters them for a small performance win, but also better debuggability; '*' wildcard matches /remotes/origin/ (and possibly other branches, but we re-filter anyway)
+    result = sub.run(branch_cmd, cwd=repo, stdout=sub.PIPE, check=True)
+    lines = [ s.decode("utf-8") for s in result.stdout.splitlines() ]
+    branch_set = set([ BRANCH_RE.sub("", l) for l in lines ])
+    if branch_list:
+        return [ b for b in branch_list if b in branch_set ]  # Keep branches in the order they were requested
+    else:
+        return sorted(branch_set)
 #####
 
 
