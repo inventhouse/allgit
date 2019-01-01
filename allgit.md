@@ -44,6 +44,7 @@ To Do
   - support git branch name globbing
 - -t/--tags - basically just like --branches but different mechanism
     - should this have a checkout mode too?
+    - mutually exclusive with --branches?
 - DONE: -m/--modified
 
 - format placeholders
@@ -73,6 +74,19 @@ To Do
   - helpers to set or move settings?
 
 - pylint (and rules to make pylint reasonable)
+
+- basic workflow example:
+        Allgit makes working with many git repositories easier; here is an example:
+        $ allgit -cb master - pull -r                       # Check out the master branch and pull it up-to-date in all repositories
+        # Make some changes
+        $ allgit -m - status                                # Show the status of the modified repositories
+        $ allgit -m - checkout -b my_feature                # Create a feature branch in modified repositories
+        $ allgit -b my_feature - commit -am "Feature!"      # Commit your changes
+        $ allgit -cb master - pull -r                       # Switch back to master and pull everything up-to-date again
+        $ allgit -cb my_feature - rebase master             # Switch back to the feature branch and rebase
+        $ allgit -b my_feature -- make test                 # Run tests; note the '--' to run a non-git command
+        $ allgit -b my_feature - push -u origin my_feature  # Push the new feature up
+  - Needs better argparse formatter
 
 ### Doneyard
 
