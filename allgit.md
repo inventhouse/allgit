@@ -11,6 +11,7 @@ Goals
 
 ### Non-goals
 - not a "front-end", doesn't replace git
+- not a generalized command-runner, git-focused
 - no "smarts" about the commands it runs
   - but not *too* dogmatic either: optional 'git', magic format placeholders, ...
 - alas, adds yet another set of hacks onto the steaming pile that is git; sorry, I don't know how to fix git (yet)
@@ -50,14 +51,12 @@ To Do
   - get remote names and strip exact prefixes for branch name normalization
 - -t/--tags - basically just like --branches but different mechanism
     - should this have a checkout mode too?
-- -c/--changed
+- -m/--modified
 
 - -f/--fetch: do a fetch in all repos to ensure we have all branches and tags
-
-- checkout mode?
-  - are there other "modes" that make sense?
-  - maybe a --checkout?  getting awful close to actual subcommands
-  - checkout mode for tags too?
+- -c/--checkout?  getting awful close to actual subcommands
+  - checkout for tags too?
+- -p/--pull?
 
 - heirarchies
   - DONE: search for repos

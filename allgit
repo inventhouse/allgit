@@ -46,6 +46,11 @@ def main(args, env):
         help="Only work on repositories which have at least one of these branches.",
     )
     parser.add_argument(
+        "-c", "--checkout",
+        action="store_true",
+        help="Check out the requested branches in the repos that have them, last branch found is the one checked out; has no effect if no branches are specified.",
+    )
+    parser.add_argument(
         "-d", "--depth",
         type=int,
         default=1,
@@ -82,24 +87,37 @@ def main(args, env):
     for d in my_args.dirs:
         found_repos.extend(find_repos(d, depth=my_args.depth, subrepos=my_args.subrepos))
 
-    repos = found_repos
-    if my_args.branches:  # REM: checkout mode will work rather differently
-        repos = [ r for r in found_repos if repo_branches(r, my_args.branches) ]
+    found_branches = []
+    if my_args.branches:
+        found_branches = [ (r, repo_branches(r, my_args.branches)[-1:]) for r in found_repos ]
+
+    # elif not repos:  # FIXME: revive this warning
+    #     print(f"Warning: found {len(found_repos)} repositories but all were filtered out")
+
+    if my_args.print_args:
+        print(f"* Args:\n\t{my_args}\n* Command:\n\t{cmd}")
+        if my_args.branches:
+            print(f"* Found Branches:\n\t{found_branches}")
+        else:
+            print(f"* Found Repos:\n\t{found_repos}")
+        return 0
 
     if not found_repos:
         print("Warning: found no repositories")
-    elif not repos:
-        print(f"Warning: found {len(found_repos)} repositories but all were filtered out")
-
-    if my_args.print_args:
-        print(f"* Args:\n\t{my_args}\n* Command:\n\t{cmd}\n* Found Repos:\n\t{found_repos}")
-        if my_args.branches:
-            print(f"* Repos:\n\t{repos}")
         return 0
 
+    run_list = []
+    if my_args.checkout and found_branches:
+        run_list = [ (r, (["git", "checkout", b[0]], cmd)) for r, b in found_branches if b ]
+    elif found_branches:
+        run_list = [ (r, (cmd,)) for r, b in found_branches if b and cmd ]
+    else:
+        run_list = [ (r, (cmd,)) for r in found_repos if cmd ]
+
     xit = 0
-    if repos and cmd:
-        xit = run_for(repos, cmd)
+    if run_list:
+        # REM: or maybe options get passed down to run_for and each repo is handled soup-to-nuts there?
+        xit = run_for(run_list)
     print("Done.")
     return xit
 
@@ -116,20 +134,23 @@ def split_args(args, delims=("--",)):
     return (before, indexes[i], after)
 
 
-def run_for(repos, cmd):
-    "Run the command in all the repos, handle printing and errors"
+def run_for(run_list):
+    "Run the commands in the repos, handle printing and errors"
     errors = []
-    for r in repos:
+    for r, cmd_list in run_list:
         print(f"-----  {r}  -----")
-        try:
-            result = sub.run(cmd, cwd=r, stderr=sub.PIPE)  # Collect stderr so it can be printed at the end
-        except FileNotFoundError as err:  # If the command is not found, this gets thrown instead of returning CP, so roll our own
-            result = sub.CompletedProcess(cmd, returncode=err.errno, stderr=err.strerror)
+        for cmd in cmd_list:
+            if not cmd:
+                continue
+            try:
+                result = sub.run(cmd, cwd=r, stderr=sub.PIPE)  # Collect stderr so it can be printed at the end
+            except FileNotFoundError as err:  # If the command is not found, this gets thrown instead of returning CP, so roll our own
+                result = sub.CompletedProcess(cmd, returncode=err.errno, stderr=err.strerror)
 
-        if result.returncode != 0:
-            errors.append( (r, result) )
-            print(result.stderr)  # REM: Should this go to our stderr?
-        print("")
+            if result.returncode != 0:
+                errors.append( (r, result) )
+                print(result.stderr)  # REM: Should this go to our stderr?
+            print("")
 
     xit = 0
     if errors:
@@ -159,20 +180,6 @@ def find_repos(root, depth=1, subrepos=False):
             continue
 
     return sorted(repos)
-
-
-def branch_repos(branch_list, repos):
-    "Takes a list of branches and repos and returns a list of branches paired with lists of repos that have those branches"
-    # branches = {}
-    repo_branches_list = []
-    for r in repos:
-        repo_branches_list.append( (r, repo_branches(r, branch_list)) )
-
-    branch_repos = []
-    for b in branch_list:  # Invert the repo_branches_list
-        branch_repos.append( (b, [ r for r, bl in repo_branches_list if b in bl ]) )  # Branches and repos stay in requested order
-
-    return branch_repos
 
 
 # '* master'
