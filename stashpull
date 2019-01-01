@@ -14,7 +14,7 @@ fi
 
 pushd "${1:-.}" >> /dev/null
 
-Status=`git status -s | egrep -v '^\?\?'`  # Untracked files, with status ??, don't get stashed; just look for "stashable" changes
+Status=`git status --short --untracked-files=no`  # Untracked files don't get stashed; just look for "stashable" changes
 if [ "$Status" ]; then
   git stash
 fi
