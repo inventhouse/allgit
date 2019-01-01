@@ -36,14 +36,16 @@ To Do
   - Need a flag for "only bare"?
 
 - DONE: error handling / printing
-  - Print if no repos were found
+  - DONE: error if no repos were found
+  - DONE: error if all repos were filtered out
 
 - add bold to some of allgit output (like repo names)
-- see if we can pass through git colors
-- 'parsable' output option?
+- PUNT: see if we can pass through git colors -- they come through inherited fds
+- NO: 'parsable' output option? -- no control over underlying command output
 
 - branch workflow
   - easy create, rebase, squash, push, fix, rebase, squash, push, eventually delete
+    - maybe best done as a helper script?
   - "global" branch?
 
 - DONE: -b/--branches to select repos with those branches
@@ -53,10 +55,10 @@ To Do
     - should this have a checkout mode too?
 - -m/--modified
 
-- -f/--fetch: do a fetch in all repos to ensure we have all branches and tags
-- -c/--checkout?  getting awful close to actual subcommands
+- DONE: -f/--fetch: do a fetch in all repos to ensure we have all branches and tags
+- DONE: -c/--checkout?  getting awful close to actual subcommands
   - checkout for tags too?
-- -p/--pull?
+- -p/--pull?  --  already have stashpull helper
 
 - heirarchies
   - DONE: search for repos
@@ -86,7 +88,7 @@ To Do
     - matching?
     - exclude?
 
-- defaults like origin and master?  other settings?
+- defaults like origin and master?  other settings like default depth?
   - "magic" tags?
   - config settings?
   - env vars?

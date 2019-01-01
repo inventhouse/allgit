@@ -2,7 +2,7 @@
 # Copyright (c) 2018 Benjamin Holt -- MIT License
 
 """
-Lightweight tool to work with many git repos.
+Lightweight tool to work with many git repositories.
 """
 import argparse
 import os
@@ -16,7 +16,7 @@ import sys
 
 ###  Main  ###
 _name = "allgit"
-_version = "v0.2"
+_version = "v0.3"
 
 def main(args, env):
     "Handle arguments, etc."
@@ -26,8 +26,8 @@ def main(args, env):
     # Non-git command must be separated by '--', but doesn't get anything magically added
 
     usage = f"""                                                       {_version}
-    \t{_name} [options] [DIR ...] - [git] SUBCOMMAND
-    \t{_name} [options] [DIR ...] -- ANY COMMAND
+    \t{_name} [DIR ...] [options] [- [git] SUBCOMMAND]
+    \t{_name} [DIR ...] [options] [-- ANY COMMAND]
     \t{_name} -h/--help"""
     description = """Run a git command in all repositories in the current directory (or those specified); can also run other scripts or commands.
     """
@@ -44,6 +44,11 @@ def main(args, env):
         nargs="+",
         metavar="B",
         help="Only work on repositories which have at least one of these branches.",
+    )
+    parser.add_argument(
+        "-f", "--fetch",
+        action="store_true",
+        help="Run 'git fetch' in each repository before checking for branches or running commands.",
     )
     parser.add_argument(
         "-c", "--checkout",
@@ -87,37 +92,25 @@ def main(args, env):
     for d in my_args.dirs:
         found_repos.extend(find_repos(d, depth=my_args.depth, subrepos=my_args.subrepos))
 
-    found_branches = []
-    if my_args.branches:
-        found_branches = [ (r, repo_branches(r, my_args.branches)[-1:]) for r in found_repos ]
-
-    # elif not repos:  # FIXME: revive this warning
-    #     print(f"Warning: found {len(found_repos)} repositories but all were filtered out")
+    repos = found_repos
+    if my_args.branches and not my_args.fetch:
+        repos = [ r for r in repos if repo_branches(r, my_args.branches) ]  # Pre-filter for repos with the branches (repo_run will end up re-checking the branches, but that's pretty quick and I don't see a clean way to avoid that)
 
     if my_args.print_args:
         print(f"* Args:\n\t{my_args}\n* Command:\n\t{cmd}")
-        if my_args.branches:
-            print(f"* Found Branches:\n\t{found_branches}")
-        else:
-            print(f"* Found Repos:\n\t{found_repos}")
+        print(f"* Found Repos:\n\t{found_repos}")
+        if repos != found_repos:
+            print(f"* Filtered Repos:\n\t{repos}")
         return 0
 
     if not found_repos:
-        print("Warning: found no repositories")
-        return 0
-
-    run_list = []
-    if my_args.checkout and found_branches:
-        run_list = [ (r, (["git", "checkout", b[0]], cmd)) for r, b in found_branches if b ]
-    elif found_branches:
-        run_list = [ (r, (cmd,)) for r, b in found_branches if b and cmd ]
-    else:
-        run_list = [ (r, (cmd,)) for r in found_repos if cmd ]
+        return "Error: found no repositories"
+    if not repos:
+        return f"Error: found {len(found_repos)} repositories but all were filtered out"
 
     xit = 0
-    if run_list:
-        # REM: or maybe options get passed down to run_for and each repo is handled soup-to-nuts there?
-        xit = run_for(run_list)
+    if cmd or my_args.fetch or (my_args.branches and my_args.checkout):  # Only call run if there's something to do
+        xit = repo_run(found_repos, cmd=cmd, fetch=my_args.fetch, branches=my_args.branches, checkout=my_args.checkout)
     print("Done.")
     return xit
 
@@ -134,31 +127,76 @@ def split_args(args, delims=("--",)):
     return (before, indexes[i], after)
 
 
-def run_for(run_list):
-    "Run the commands in the repos, handle printing and errors"
-    errors = []
-    for r, cmd_list in run_list:
+def repo_run(repos, cmd=None, fetch=False, branches=None, checkout=False):
+    "Run the commands in the repos, including optional fetch, branch-check, and checkout; also handle printing and errors"
+    print_cmd = (fetch or checkout)  # Print "active" commands if running more than just the user command
+    errors = {}  # {repo: [(command, error), ...], ...}
+    for i,r in enumerate(repos):
+        if i > 0:
+            print("")  # Add a blank between repos if looping multiple times
         print(f"-----  {r}  -----")
-        for cmd in cmd_list:
-            if not cmd:
+        if fetch:
+            checkout_cmd = ["git", "fetch"]
+            ok = run_collect_error(r, checkout_cmd, errors, print_cmd=print_cmd)
+            if not ok:
                 continue
-            try:
-                result = sub.run(cmd, cwd=r, stderr=sub.PIPE)  # Collect stderr so it can be printed at the end
-            except FileNotFoundError as err:  # If the command is not found, this gets thrown instead of returning CP, so roll our own
-                result = sub.CompletedProcess(cmd, returncode=err.errno, stderr=err.strerror)
 
-            if result.returncode != 0:
-                errors.append( (r, result) )
-                print(result.stderr)  # REM: Should this go to our stderr?
-            print("")
+        found_branches = None
+        if branches:
+            found_branches = repo_branches(r, branches)
+            # found_branch = found_branches[-1] if found_branches else None
+        if branches and not found_branches:  # REM: this won't come up if repos were pre-filtered
+            print("Branches not found, skipping")
+            continue
+        if fetch and found_branches:  # Only print if branches might be newly-found
+            print(f"Found branches: {', '.join(found_branches)}")
+
+        if checkout and found_branches:
+            checkout_cmd = ["git", "checkout", found_branches[-1]]
+            ok = run_collect_error(r, checkout_cmd, errors, print_cmd=print_cmd)
+            if not ok:
+                continue
+
+        if cmd:
+            ok = run_collect_error(r, cmd, errors, print_cmd=print_cmd)
+            if not ok:
+                continue  # REM: Not strictly necessary here, but maintains the pattern
 
     xit = 0
     if errors:
-        print("ERRORS:")
-        for (repo, result) in errors:
-            print(f"\t{repo}:\n{result.stderr}")  # REM: Should this go to our stderr?
-            xit = result.returncode  # Return the last error code 'cos pick one
+        print("\nERRORS:", file=sys.stderr)
+        for r in repos:
+            if r not in errors:
+                continue
+            print(f"\t{r}:", file=sys.stderr)
+            for c, e in errors[r]:
+                print(f"{pretty_cmd(c)}: {e.stderr}", file=sys.stderr, end="")
+                xit = e.returncode  # Return the last error code 'cos pick one
     return xit
+
+
+def run_collect_error(r, cmd, errors, print_cmd=False):
+    if print_cmd:
+        print(pretty_cmd(cmd))
+    try:
+        result = sub.run(cmd, cwd=r, stderr=sub.PIPE)  # Collect stderr so it can be printed at the end
+    except FileNotFoundError as err:  # If the command is not found, this gets thrown instead of returning CP, so roll our own
+        result = sub.CompletedProcess(cmd, returncode=err.errno, stderr=err.strerror)
+    else:
+        if result.stderr:
+            result.stderr = result.stderr.decode("utf-8")  # Normalize stderr to a real string
+
+    if result.returncode != 0:
+        if r not in errors:
+            errors[r] = []
+        errors[r] += [(cmd, result),]
+        print(result.stderr, file=sys.stderr, end="")
+        return False
+    return True
+
+
+def pretty_cmd(c):
+    return "$ {}".format(" ".join(c))
 ####
 
 
