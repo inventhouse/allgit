@@ -41,9 +41,10 @@ To Do
 - DONE: -b/--branches to select repos with those branches
   - NO: should this run other commands multiple times on repos with multiple matching branches?
   - get remote names and strip exact prefixes for branch name normalization
+  - support git branch name globbing
 - -t/--tags - basically just like --branches but different mechanism
     - should this have a checkout mode too?
-- -m/--modified
+- DONE: -m/--modified
 
 - format placeholders
   - PUNT: repo name? - no, can be extracted from dir
@@ -70,6 +71,8 @@ To Do
   - env vars?
   - some combination or search path of the above?
   - helpers to set or move settings?
+
+- pylint (and rules to make pylint reasonable)
 
 ### Doneyard
 

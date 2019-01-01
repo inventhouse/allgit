@@ -48,12 +48,17 @@ def main(args, env):
     parser.add_argument(
         "-f", "--fetch",
         action="store_true",
-        help="Run 'git fetch' in each repository before checking for branches or running commands.",
+        help="Run 'git fetch' on each repository before checking for branches or running commands.",
     )
     parser.add_argument(
         "-c", "--checkout",
         action="store_true",
         help="Check out the requested branches in the repos that have them, last branch found is the one checked out; has no effect if no branches are specified.",
+    )
+    parser.add_argument(
+        "-m", "--modified",
+        action="store_true",
+        help="Only work on repositories with local changes (not including untracked files).",
     )
     parser.add_argument(
         "-d", "--depth",
@@ -91,8 +96,11 @@ def main(args, env):
     found_repos = []
     for d in my_args.dirs:
         found_repos.extend(find_repos(d, depth=my_args.depth, subrepos=my_args.subrepos))
-
     repos = found_repos
+
+    if my_args.modified:
+        repos = [ r for r in repos if repo_changes(r) ]
+
     if my_args.branches and not my_args.fetch:
         repos = [ r for r in repos if repo_branches(r, my_args.branches) ]  # Pre-filter for repos with the branches (repo_run will end up re-checking the branches, but that's pretty quick and I don't see a clean way to avoid that)
 
@@ -106,11 +114,11 @@ def main(args, env):
     if not found_repos:
         return "Error: found no repositories"
     if not repos:
-        return f"Error: found {len(found_repos)} repositories but all were filtered out"
+        return f"Error: found {len(found_repos)} repositories but all were filtered out"  # REM: error seems harsh for things like -m which might legitimately filter all repos
 
     xit = 0
     if cmd or my_args.fetch or (my_args.branches and my_args.checkout):  # Only call run if there's something to do
-        xit = repo_run(found_repos, cmd=cmd, fetch=my_args.fetch, branches=my_args.branches, checkout=my_args.checkout)
+        xit = repo_run(repos, cmd=cmd, fetch=my_args.fetch, branches=my_args.branches, checkout=my_args.checkout)
     print("Done.")
     return xit
 
@@ -236,6 +244,16 @@ def repo_branches(repo, branch_list=None):
         return [ b for b in branch_list if b in branch_set ]  # Keep branches in the order they were requested
     else:
         return sorted(branch_set)
+
+
+def repo_changes(repo, include_untracked=False):
+    "Returns lines of short git status, optionally including untracked files, for repo"
+    status_cmd = ["git", "status", "--short"]
+    if not include_untracked:
+        status_cmd.append("--untracked-files=no")
+    result = sub.run(status_cmd, cwd=repo, stdout=sub.PIPE, check=True)
+    lines = [ s.decode("utf-8") for s in result.stdout.splitlines() ]
+    return lines
 #####
 
 
