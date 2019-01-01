@@ -25,19 +25,9 @@ Git Tricks
 
 To Do
 -----
-- DONE: start with git op on current repos
-- DONE: specified repos
-  - DONE: split args
-  - DONE: allow delimiters in the command-half (requires searching for all the delimiters, split on the first, and make note of which kind)
-- DONE: --version and version in help
-
 - DONE: handle bare repos from the start
   - PUNT: some git commands don't work on bare, do we need to handle those differently? - no, no "special knowledge" of git commands
   - Need a flag for "only bare"?
-
-- DONE: error handling / printing
-  - DONE: error if no repos were found
-  - DONE: error if all repos were filtered out
 
 - add bold to some of allgit output (like repo names)
 - PUNT: see if we can pass through git colors -- they come through inherited fds
@@ -55,20 +45,6 @@ To Do
     - should this have a checkout mode too?
 - -m/--modified
 
-- DONE: -f/--fetch: do a fetch in all repos to ensure we have all branches and tags
-- DONE: -c/--checkout?  getting awful close to actual subcommands
-  - checkout for tags too?
-- -p/--pull?  --  already have stashpull helper
-
-- heirarchies
-  - DONE: search for repos
-  - DONE: -d/--depth and -r/--recursive
-    - DONE: should recursive also imply "search for sub-repos"? - Yes
-  - DONE: don't descend into git working repos
-    - DONE: flag to search for subrepos
-    - how does git cope with repos within repos?  (iirc, subrepo is simply "untracked")
-    - what about submodules?
-
 - format placeholders
   - PUNT: repo name? - no, can be extracted from dir
   - repo dir
@@ -82,7 +58,7 @@ To Do
 - clone
   - make script
     - script should handle not cloning repos that already exist
-    - clone script re-create heirarchies
+    - clone script should re-create heirarchies
   - auto-find github/gitlab repos for a given org/user/whatever?
     - list?
     - matching?
@@ -96,5 +72,28 @@ To Do
   - helpers to set or move settings?
 
 ### Doneyard
+
+- DONE: start with git op on current repos
+- DONE: specified repos
+  - DONE: split args
+  - DONE: allow delimiters in the command-half (requires searching for all the delimiters, split on the first, and make note of which kind)
+- DONE: --version and version in help
+
+- DONE: error handling / printing
+  - DONE: error if no repos were found
+  - DONE: error if all repos were filtered out
+
+- DONE: -f/--fetch: do a fetch in all repos to ensure we have all branches and tags
+- DONE: -c/--checkout?  getting awful close to actual subcommands
+- PUNT: -p/--pull?  --  already have stashpull helper
+
+- DONE: heirarchies
+  - DONE: search for repos
+  - DONE: -d/--depth and -r/--recursive
+    - DONE: should recursive also imply "search for sub-repos"? - Yes
+  - DONE: don't descend into git working repos
+    - DONE: flag to search for subrepos
+    - PUNT: how does git cope with repos within repos?  (iirc, subrepo is simply "untracked")
+    - PUNT: what about submodules?
 
 ---
