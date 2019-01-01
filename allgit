@@ -170,7 +170,7 @@ def repo_run(repos, cmd=None, fetch=False, branches=None, checkout=False):
                 continue
             print(f"\t{r}:", file=sys.stderr)
             for c, e in errors[r]:
-                print(f"{pretty_cmd(c)}: {e.stderr}", file=sys.stderr, end="")
+                print("{}: {}".format(pretty_cmd(c), e.stderr.rstrip('\n')), file=sys.stderr)
                 xit = e.returncode  # Return the last error code 'cos pick one
     return xit
 
@@ -190,7 +190,8 @@ def run_collect_error(r, cmd, errors, print_cmd=False):
         if r not in errors:
             errors[r] = []
         errors[r] += [(cmd, result),]
-        print(result.stderr, file=sys.stderr, end="")
+        print(result.stderr.rstrip("\n"), file=sys.stderr)
+
         return False
     return True
 
