@@ -5,8 +5,7 @@
 
 if [ "$1" == "-h" -o "$1" == "--help" ]; then
     cat <<USAGE
-usage: stashpull [REPO]     Stashes changes and pulls (with rebase) REPO, then
-                            pops the stashed changes back.
+usage: stashpull [REPO]     Pulls with rebase and autostash REPO.
        stashpull -h|--help  Print this message and exit
 USAGE
     exit 0
@@ -14,16 +13,7 @@ fi
 
 pushd "${1:-.}" >> /dev/null
 
-Status=`git status --short --untracked-files=no`  # Untracked files don't get stashed; just look for "stashable" changes
-if [ "$Status" ]; then
-  git stash
-fi
-
-git pull --rebase=true
-
-if [ "$Status" ]; then
-  git stash pop
-fi
+git pull --rebase=true --autostash  # Turns out git has this built-in, just use that
 
 popd >> /dev/null
 
