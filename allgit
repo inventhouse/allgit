@@ -31,7 +31,7 @@ def main(args, env):
     \t{_name} -h/--help"""
     description = """Run a git command in all repositories in the current directory (or those specified); can also run other scripts or commands.
     """
-    epilog = """Allgit makes working with many git repositories easier, especially keeping all repositories up-to-date, managing branches between repositories, and making changes across multiple repositories.  It works regardless of where the repositories are from and without requiring centralized configuration or additional management.  It also serves as a platform for running other scripts, making them much simpler to write.
+    epilog = """Allgit makes working with many git repositories easier, especially keeping them all up-to-date, managing branches between them, and making changes across multiple projects.  Example workflow and more in the accompanying allgit.md or online: https://github.com/inventhouse/BenBin/blob/master/allgit.md
     """
     parser = argparse.ArgumentParser(usage=usage, description=description, epilog=epilog)
     parser.add_argument(

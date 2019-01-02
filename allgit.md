@@ -1,6 +1,46 @@
 allgit
 ======
-Git power-tool to rip through your repos; platform for git scripts
+Allgit makes working with many git repositories easier, especially keeping them all up-to-date, managing branches between them, and making changes across multiple projects.
+
+It works regardless of where the repositories came from and without requiring any configuration, maintaining lists of repositories, setting up a "super-repository", or other additional management.
+
+It also serves as a platform for other scripts like `squashbranch`; if we can write a script that works on just one repository, allgit can run it across any number.
+
+
+Example Workflow
+----------------
+First, have a look at `allgit -h` to see what the options mean.
+
+| Commands | Notes |
+|----------|-------|
+|`$ allgit -cb master - pull -r`                     | Check out the master branch and pull it up-to-date in all repositories; note the `-` between the allgit options and the git command
+|_(Make some changes)_                               ||
+|`$ allgit -m - status`                              | Show the status of the modified repositories
+|`$ allgit -m - checkout -b my_feature`              | Create a feature branch in modified repositories; we can now work with these repositories based on that branch
+|`$ allgit -b my_feature - commit -am "Feature!"`    | Commit the changes
+|`$ allgit -fb my_feature - rebase origin/master`    | Fetch in all repositories and rebase the feature branch from master
+|`$ allgit -b my_feature -- make test`               | Run tests; note the `--` to run a non-git command
+|`$ allgit -b my_feature - push -u origin my_feature`| Push the new feature up to make PRs
+
+Note that this workflow is the same no matter how many repositories we have or even how many are involved in the feature changes - no repeating commands per repo!
+
+
+More on Branches
+----------------
+Branches are integral to change management in git; it turns out that feature and release branches are a very natural way to group projects that allgit should work on together.  On the flip side, allgit makes it very easy make consistent branches among related projects.
+
+In fact, it can be useful to, judiciously, make branches for the sole purpose grouping repositories; allgit's `--branches` filter just checks if the desired branches exists, they don't have to be checked out.
+
+On the other hand, we often work with varied repositories that may branch for release on different schedules or come from multiple sources which may have differing branching and naming practices.
+
+Allgit's `--checkout --branches` (`-cb`) was literally made for this.  By specifying a list of branches in last-one-wins order, a single command can ensure that all the projects are coherent.
+
+For example, say we have a bunch of repositories that integrate together: some have branched for 'SpamRelease', one works from a 'development' branch, we have a feature branch across a few, and the rest should be on 'master', we could simply run:
+
+`$ allgit -cb master SpamRelease development my_feature`
+
+We can even add a ` - pull -r` to the end to pull them up-to-date after everything is on the right branch, as we did at the beginning of the example workflow above.
+
 
 Goals
 -----
@@ -10,17 +50,11 @@ Goals
 - good arsenal of scripts for common git tasks (_not_ built-in though)
 
 ### Non-goals
-- not a "front-end", doesn't replace git
+- not a "front-end", doesn't replace git nor git commands
 - not a generalized command-runner, git-focused
 - no "smarts" about the commands it runs
-  - but not *too* dogmatic either: optional 'git', magic format placeholders, ...
+  - but not *too* dogmatic either: optional 'git', magic fetch, branch, and checkout options, ...
 - alas, adds yet another set of hacks onto the steaming pile that is git; sorry, I don't know how to fix git (yet)
-
-
-Git Tricks
-----------
-- get current branch: `$ git rev-parse --abbrev-ref HEAD`  (could be useful for pushbranch/popbranch script)
-- get branch point: `$ git merge-base master $(git rev-parse --abbrev-ref HEAD)`
 
 
 To Do
@@ -75,18 +109,9 @@ To Do
 
 - pylint (and rules to make pylint reasonable)
 
-- basic workflow example:
-        Allgit makes working with many git repositories easier; here is an example:
-        $ allgit -cb master - pull -r                       # Check out the master branch and pull it up-to-date in all repositories
-        # Make some changes
-        $ allgit -m - status                                # Show the status of the modified repositories
-        $ allgit -m - checkout -b my_feature                # Create a feature branch in modified repositories
-        $ allgit -b my_feature - commit -am "Feature!"      # Commit your changes
-        $ allgit -cb master - pull -r                       # Switch back to master and pull everything up-to-date again
-        $ allgit -cb my_feature - rebase master             # Switch back to the feature branch and rebase
-        $ allgit -b my_feature -- make test                 # Run tests; note the '--' to run a non-git command
-        $ allgit -b my_feature - push -u origin my_feature  # Push the new feature up
-  - Needs better argparse formatter
+- basic workflow example in --help
+  - needs better argparse formatter
+
 
 ### Doneyard
 
