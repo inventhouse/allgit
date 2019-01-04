@@ -11,8 +11,8 @@ Example Workflow
 ----------------
 First, have a look at `allgit -h` to see what the options mean.
 
-| Commands | Notes |
-|----------|-------|
+| Commands                                           | Notes |
+|----------------------------------------------------|-------|
 |`$ allgit -cb master - pull -r`                     | Check out the master branch and pull it up-to-date in all repositories; note the `-` between the allgit options and the git command
 |_(Make some changes)_                               ||
 |`$ allgit -m - status`                              | Show the status of the modified repositories
@@ -50,22 +50,28 @@ Goals
 - good arsenal of scripts for common git tasks (_not_ built-in though)
 
 ### Non-goals
-- not a "front-end", doesn't replace git nor git commands
+- not a "front-end", doesn't replace git nor git commands; sorry, I don't know how to fix git (yet)
 - not a generalized command-runner, git-focused
 - no "smarts" about the commands it runs
   - but not *too* dogmatic either: optional 'git', magic fetch, branch, and checkout options, ...
-- alas, adds yet another set of hacks onto the steaming pile that is git; sorry, I don't know how to fix git (yet)
+- alas, adds yet another set of hacks onto git
+- not supporting old versions of Python
 
 
 To Do
 -----
-- DONE: handle bare repos from the start
-  - PUNT: some git commands don't work on bare, do we need to handle those differently? - no, no "special knowledge" of git commands
-  - Need a flag for "only bare"?
-
 - add bold to some of allgit output (like repo names)
-- PUNT: see if we can pass through git colors -- they come through inherited fds
-- NO: 'parsable' output option? -- no control over underlying command output
+  - check terminal type / capabilities?  just interactive vs. not?  cross-platform compatibility?
+
+- clone
+  - make script
+    - script should handle not cloning repos that already exist
+    - clone script should re-create heirarchies
+    - standalone - script shouldn't depend on allgit or other things
+  - auto-find github/gitlab repos for a given org/user/whatever?
+    - list?
+    - matching?
+    - exclude?
 
 - branch workflow
   - easy create, rebase, squash, push, fix, rebase, squash, push, eventually delete
@@ -91,15 +97,6 @@ To Do
   - could some / all of these be "passed" to scripts as env vars? - might make it easier to write "subcommands"
     - sentinel var scripts could check for and print usage?
 
-- clone
-  - make script
-    - script should handle not cloning repos that already exist
-    - clone script should re-create heirarchies
-  - auto-find github/gitlab repos for a given org/user/whatever?
-    - list?
-    - matching?
-    - exclude?
-
 - defaults like origin and master?  other settings like default depth?
   - "magic" tags?
   - config settings?
@@ -111,6 +108,10 @@ To Do
 
 - basic workflow example in --help
   - needs better argparse formatter
+
+- DONE: handle bare repos
+  - PUNT: some git commands don't work on bare, do we need to handle those differently? - no, no "special knowledge" of git commands
+  - Need a flag for "only bare"?
 
 
 ### Doneyard
@@ -137,5 +138,9 @@ To Do
     - DONE: flag to search for subrepos
     - PUNT: how does git cope with repos within repos?  (iirc, subrepo is simply "untracked")
     - PUNT: what about submodules?
+
+- PUNT: see if we can pass through git colors -- they come through inherited fds
+- NO: 'parsable' output option? -- no control over underlying command output
+
 
 ---
