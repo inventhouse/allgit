@@ -29,7 +29,9 @@ More on Branches
 ----------------
 Branches are integral to change management in git; it turns out that feature and release branches are a very natural way to group projects that allgit should work on together.  On the flip side, allgit makes it very easy make consistent branches among related projects.
 
-In fact, it can be useful to, judiciously, make branches for the sole purpose grouping repositories; allgit's `--branches` filter just checks if the desired branches exists, they don't have to be checked out.
+_(( Work in some of the ways we can create branches based on previous branches or collections of branches and the like ))_
+
+In fact, it can be useful to, judiciously, make branches for the sole purpose grouping repositories; allgit's `--branches` filter just checks if any of the desired branches exist, they don't have to be checked out.
 
 On the other hand, we often work with varied repositories that may branch for release on different schedules or come from multiple sources which may have differing branching and naming practices.
 
@@ -40,6 +42,21 @@ For example, say we have a bunch of repositories that integrate together: some h
 `$ allgit -cb master SpamRelease development my_feature`
 
 We can even add a ` - pull -r` to the end to pull them up-to-date after everything is on the right branch, as we did at the beginning of the example workflow above.
+
+
+Finding and Filtering
+---------------------
+Repositories grow and multiply; that's why we need allgit in the first place.  To find repositories, allgit searches one level into the directories specified on the command line (or the current directory), and doesn't search inside repositories it finds.
+
+So, if we run it in a directory with some repositories cloned as immediate children, it will find those; if we run it while inside a repo, it will just work on the current repo.  These defaults control the scope and keep runs quick.
+
+To search deeper, maybe we keep our repos organized in folders, we can specify those directories to search or give a`--depth` (`-d`); note it still doesn't search inside repositories unless we pass `--subrepos`.  To _really_ find them all `--recursive` (`-r`) searches to an unlimited depth and looks for subrepos.
+
+Often, though, we want to be a bit more selective about which repos we work on.  First, we can simply give a list on the command line, but that could be tedious or error-prone.  _(( On the other hand, work in how shell globbing can be a powerful tool ))_
+
+Allgit offers a couple simple filters, in addition to `--branches` covered above, `--modified` (`-m`) will select only repositories with local modifications.
+
+These three mechanisms add together, so we can readily compose a command to work on only modified repositories with certain branches among particular directories.
 
 
 Goals
@@ -72,6 +89,25 @@ To Do
     - list?
     - matching?
     - exclude?
+
+- docs
+  - DONE: intro
+  - DONE: example workflow
+  - more on branches
+  - finding and filtering
+  - -c and -f
+  - commands and scripts
+  - tricks?  (eg printing branches with -f)
+  - perhaps extended tutorial with more concrete use-cases?
+
+- more testing
+  - create test assets
+  - test bare repos
+  - test --depth is accurate
+  - test subrepos
+  - symlinks? (dunno if following them is a good idea or not, but should doc either way)
+  - how to unit test all this?
+  - add more tests as new features are added
 
 - branch workflow
   - easy create, rebase, squash, push, fix, rebase, squash, push, eventually delete
@@ -112,6 +148,7 @@ To Do
 - DONE: handle bare repos
   - PUNT: some git commands don't work on bare, do we need to handle those differently? - no, no "special knowledge" of git commands
   - Need a flag for "only bare"?
+    - maybe `*.git` is enough?
 
 
 ### Doneyard
