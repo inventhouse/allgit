@@ -7,6 +7,21 @@ It works regardless of where the repositories came from and without requiring an
 It also serves as a platform for other scripts like `squashbranch`; if we can write a script that works on just one repository, allgit can run it across any number.
 
 
+Setup
+-----
+Allgit expects to find Python 3.5+ in the path as `python3`; personally, I like the [Anaconda distribution](https://www.anaconda.com/download/) to bring macOS into the modern age.
+
+Although allgit is self-contained other than the Python standard libraries, cloning this repository is recommended so it can be kept up-to-date:
+
+`$ git clone https://github.com/inventhouse/allgit.git`
+
+It can then be added to the path and/or aliased to make it as easy to use as possible; add these to your `~/.bash_profile` or preferred shell's config file:
+
+`PATH=$PATH:/path/to/allgit/`
+
+`alias ag='allgit'`
+
+
 Example Workflow
 ----------------
 First, have a look at `allgit -h` to see what the options mean.
