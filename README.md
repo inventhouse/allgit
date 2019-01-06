@@ -17,7 +17,7 @@ Although allgit is self-contained other than the Python standard libraries, clon
 
 It can then be added to the path and/or aliased to make it as easy to use as possible; add these to your `~/.bash_profile` or preferred shell's config file:
 
-`PATH=$PATH:/path/to/allgit/`
+`PATH=$PATH:/path/to/allgit`
 
 `alias ag='allgit'`
 
@@ -83,7 +83,7 @@ Goals
 
 ### Non-goals
 - not a "front-end", doesn't replace git nor git commands; sorry, I don't know how to fix git (yet)
-- not a generalized command-runner, git-focused
+- not a generalized command-runner, git-focused (*can* run any command, but *only* in git repos)
 - no "smarts" about the commands it runs
   - but not *too* dogmatic either: optional 'git', magic fetch, branch, and checkout options, ...
 - alas, adds yet another set of hacks onto git
@@ -95,12 +95,12 @@ To Do
 - add bold to some of allgit output (like repo names)
   - check terminal type / capabilities?  just interactive vs. not?  cross-platform compatibility?
 
-- clone
-  - make script
-    - script should handle not cloning repos that already exist
-    - clone script should re-create heirarchies
-    - standalone - script shouldn't depend on allgit or other things
-  - auto-find github/gitlab repos for a given org/user/whatever?
+- DONE: clone
+  - DONE: make script
+    - DONE: script should handle not cloning repos that already exist
+    - DONE: clone script should re-create heirarchies
+    - DONE: standalone - script shouldn't depend on allgit or other things
+  - PUNT: auto-find github/gitlab repos for a given org/user/whatever?
     - list?
     - matching?
     - exclude?
@@ -112,12 +112,13 @@ To Do
   - finding and filtering
   - -c and -f
   - commands and scripts
+    - other scripts in this repo
   - tricks?  (eg printing branches with -f)
   - perhaps extended tutorial with more concrete use-cases?
 
 - more testing
   - create test assets
-  - test bare repos
+  - test edge-case repos: bare, local, empty, zero-commits
   - test --depth is accurate
   - test subrepos
   - symlinks? (dunno if following them is a good idea or not, but should doc either way)
@@ -129,6 +130,8 @@ To Do
     - maybe best done as a helper script?
   - "global" branch?
 
+ - `pleasemake` helper - make a target in repos where it can be easily found in the Makefile
+
 - DONE: -b/--branches to select repos with those branches
   - NO: should this run other commands multiple times on repos with multiple matching branches?
   - get remote names and strip exact prefixes for branch name normalization
@@ -137,6 +140,7 @@ To Do
     - should this have a checkout mode too?
     - mutually exclusive with --branches?
 - DONE: -m/--modified
+- -x/--exclude
 
 - format placeholders
   - PUNT: repo name? - no, can be extracted from dir

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3 -tt
-# Copyright (c) 2018 Benjamin Holt -- MIT License
+# Copyright (c) 2018-2019 Benjamin Holt -- MIT License
 
 """
 Lightweight tool to work with many git repositories.
@@ -16,7 +16,7 @@ import sys
 
 ###  Main  ###
 _name = "allgit"
-_version = "v0.3"
+_version = "v0.5"
 
 def main(args, env):
     "Handle arguments, etc."
@@ -80,6 +80,12 @@ def main(args, env):
         help="Search git repositories for repositories cloned as subdirectories.",
     )
     parser.add_argument(
+        "--clone-script",
+        nargs="?",
+        const=sys.stdout,
+        help="Generate a bash script to reproduce this group of repositories; local repos and branches will be noted in the script but elided.  When the script is run, existing repos will be skipped; bare repos will be mirrored.",
+    )
+    parser.add_argument(
         "--print-args",
         action="store_true",
         help="Print allgit arguments, command, and repos, then exit.",
@@ -119,14 +125,14 @@ def main(args, env):
         return f"Error: found {len(found_repos)} repositories but all were filtered out"  # REM: error seems harsh for things like -m which might legitimately filter all repos
 
     xit = 0
-    if cmd or my_args.fetch or (my_args.branches and my_args.checkout):  # Only call run if there's something to do
-        xit = repo_run(repos, cmd=cmd, fetch=my_args.fetch, branches=my_args.branches, checkout=my_args.checkout)
+    if cmd or my_args.clone_script or my_args.fetch or (my_args.branches and my_args.checkout):  # Only call run if there's something to do
+        xit = repo_run(repos, cmd=cmd, fetch=my_args.fetch, branches=my_args.branches, checkout=my_args.checkout, script_out=my_args.clone_script)
     print("Done.")
     return xit
 
 
 def split_args(args, delims=("--",)):
-    "Splits the argument list on the first delimiter found; returns a tuple of the first arg list, that delimiter, and the second arg list"
+    "Splits the argument list on the first delimiter found; returns a tuple of the first arg list, that delimiter, and the second arg list."
     indexes = { args.index(d): d for d in delims if d in args }
     if not indexes:
         return (args, None, None)
@@ -137,24 +143,26 @@ def split_args(args, delims=("--",)):
     return (before, indexes[i], after)
 
 
-def repo_run(repos, cmd=None, fetch=False, branches=None, checkout=False):
-    "Run the commands in the repos, including optional fetch, branch-check, and checkout; also handle printing and errors"
+def repo_run(repos, cmd=None, fetch=False, branches=None, checkout=False, script_out=None):
+    "Run the commands in the repos, including optional fetch, branch-check, and checkout; also handle printing and errors."
+    # FIXME: This is getting long and twisty, try to clean it up; perhaps rewrite to take a callable instead of cmd?  refactor fetch/checkout/etc logic out and separate out different actions cmd vs. script?
+    script_lines = []
     print_cmd = (fetch or checkout)  # Print "active" commands if running more than just the user command
     errors = {}  # {repo: [(command, error), ...], ...}
     for i,r in enumerate(repos):
-        if i > 0:
-            print("")  # Add a blank between repos if looping multiple times
-        print(f"-----  {r}  -----")
+        if cmd or print_cmd:  # Only print if doing something 'interesting'; skip printing if just generating clone_script
+            if i > 0:
+                print("")  # Add a blank between repos if looping multiple times
+            print(f"-----  {r}  -----")
         if fetch:
-            checkout_cmd = ["git", "fetch"]
-            ok = run_collect_error(r, checkout_cmd, errors, print_cmd=print_cmd)
+            fetch_cmd = ["git", "fetch"]
+            ok = run_collect_error(r, fetch_cmd, errors, print_cmd=print_cmd)
             if not ok:
                 continue
 
         found_branches = None
         if branches:
             found_branches = repo_branches(r, branches)
-            # found_branch = found_branches[-1] if found_branches else None
         if branches and not found_branches:  # REM: this won't come up if repos were pre-filtered
             print("Branches not found, skipping")
             continue
@@ -172,6 +180,9 @@ def repo_run(repos, cmd=None, fetch=False, branches=None, checkout=False):
             if not ok:
                 continue  # REM: Not strictly necessary here, but maintains the pattern
 
+        if script_out:
+            script_lines.append(clone_script_line(r))
+
     xit = 0
     if errors:
         print("\nERRORS:", file=sys.stderr)
@@ -180,44 +191,56 @@ def repo_run(repos, cmd=None, fetch=False, branches=None, checkout=False):
                 continue
             print(f"\t{r}:", file=sys.stderr)
             for c, e in errors[r]:
-                print("{}: {}".format(pretty_cmd(c), e.stderr.rstrip('\n')), file=sys.stderr)
+                print("{}: {}".format(pretty_cmd(c), e.stderr.rstrip(b"\n").decode("utf-8")), file=sys.stderr)
                 xit = e.returncode  # Return the last error code 'cos pick one
+
+    if script_out:
+        script = CLONE_SCRIPT.format(repo_lines="\n".join(script_lines))
+        if script_out is sys.stdout:
+            print("\nClone script:\n")
+            script_out.write(script)
+            print("")  # Add a newline so main's "Done" doesn't look like part of the script
+        else:
+            with open(script_out, "wb") as f:
+                f.write(script.encode("utf-8"))
+                os.chmod(script_out, 0o755)  # FIXME: This may not work on some platforms
+            print("Clone script saved as {}".format(script_out))
+
     return xit
 
 
 def run_collect_error(r, cmd, errors, print_cmd=False):
+    "Runs a command and adds any error to the errors dictionary; returns True if the command was successful."
     if print_cmd:
         print(pretty_cmd(cmd))
     try:
         result = sub.run(cmd, cwd=r, stderr=sub.PIPE)  # Collect stderr so it can be printed at the end
     except FileNotFoundError as err:  # If the command is not found, this gets thrown instead of returning CP, so roll our own
         result = sub.CompletedProcess(cmd, returncode=err.errno, stderr=err.strerror)
-    else:
-        if result.stderr:
-            result.stderr = result.stderr.decode("utf-8")  # Normalize stderr to a real string
 
     if result.returncode != 0:
         if r not in errors:
             errors[r] = []
         errors[r] += [(cmd, result),]
-        print(result.stderr.rstrip("\n"), file=sys.stderr)
+        print(result.stderr.rstrip(b"\n").decode("utf-8"), file=sys.stderr)
 
         return False
     return True
 
 
-def pretty_cmd(c):
-    return "$ {}".format(" ".join(c))
-####
+def pretty_cmd(c, prompt="$ "):
+    "Format a command with a pseudo-prompt for display."
+    return "{}{}".format(prompt, " ".join(c))
+#####
 
 
 ###  Repos  ###
 def find_repos(root, depth=1, subrepos=False):
-    "Find repos in a directory, limited to 'depth' levels"
+    "Find repos in a directory, limited to 'depth' levels."
     start_depth = len(PurePath(root).parts)
     repos = []
     for current, dirs, files in os.walk(root):  # TODO: Maybe 'in/exclude' pattern option?
-        is_bare_repo = current.endswith(".git")
+        is_bare_repo = repo_is_bare(current)
         if is_bare_repo or ".git" in dirs:
             repos.append(current)
             dirs[:] = [ d for d in dirs if subrepos and not is_bare_repo and d != ".git" ]  # If searching for subrepos, don't search bare repos or .git
@@ -235,7 +258,7 @@ def find_repos(root, depth=1, subrepos=False):
 # '  remotes/origin/master'
 BRANCH_RE = re.compile(r"^\*?\s*(remotes/[^/]*/)?")  # Match the star-space or space-space and optional 'remotes/*/' prefix to be stripped from branch names; assumes remote names do not contain '/'  # REM: maybe we can get a list of actual remote names to work against
 def repo_branches(repo, branch_list=None):
-    "returns a list of branch names for repo; remote branches are reduced to their base name (stripped of remotes/origin/) and de-duped.  If a list of desired branches is provided, only those will be returned if they exist for the repo"  # FIXME: this description is a mess
+    "Returns a list of branch names for repo; remote branches are reduced to their base name (stripped of remotes/origin/) and de-duped.  If a list of desired branches is provided, only those will be returned if they exist for the repo."  # FIXME: this description is a mess
     branch_cmd = ["git", "branch", "--list", "--all",]
     if branch_list:
         branch_cmd.extend([ "*" + b for b in branch_list ])  # passing the list of branches to git pre-filters them for a small performance win, but also better debuggability; '*' wildcard matches /remotes/origin/ (and possibly other branches, but we re-filter anyway)
@@ -248,14 +271,100 @@ def repo_branches(repo, branch_list=None):
         return sorted(branch_set)
 
 
+def repo_current_branch(repo):
+    "Returns the current branch for a git repository."
+    branch = None
+    branch_cmd = ["git", "branch"]
+    result = sub.run(branch_cmd, cwd=repo, stdout=sub.PIPE, check=True)
+    lines = [ s.decode("utf-8") for s in result.stdout.splitlines() ]
+    if lines:  # Empty repos don't really have branches
+        current_line = [ l[2:] for l in lines if l.startswith("* ") ]
+        branch = current_line[0] if current_line else None
+    return branch
+
+
 def repo_changes(repo, include_untracked=False):
     "Returns lines of short git status, optionally including untracked files, for repo"
+    if repo_is_bare(repo):
+        return []  # Git status fails in a bare repo
     status_cmd = ["git", "status", "--short"]
     if not include_untracked:
         status_cmd.append("--untracked-files=no")
     result = sub.run(status_cmd, cwd=repo, stdout=sub.PIPE, check=True)
     lines = [ s.decode("utf-8") for s in result.stdout.splitlines() ]
     return lines
+
+
+def repo_remotes(repo):
+    "Returns the list of remotes for a git repository."
+    remote_cmd = ["git", "remote"]
+    result = sub.run(remote_cmd, cwd=repo, stdout=sub.PIPE, check=True)
+    lines = [ s.decode("utf-8") for s in result.stdout.splitlines() ]
+    return lines
+
+
+def repo_remote_url(repo, remote="origin"):
+    "Returns the fetch URL for a remote for a git repository."
+    remote_url_cmd = ["git", "remote", "get-url", remote]
+    result = sub.run(remote_url_cmd, cwd=repo, stdout=sub.PIPE, check=True)
+    lines = [ s.decode("utf-8") for s in result.stdout.splitlines() ]
+    return lines[0] if lines else None
+
+
+def repo_is_bare(repo):
+    "Checks if a directory is a bare git repository."
+    return repo.endswith(".git")  # FIXME: maybe a better heuristic? r/HEAD exists or somesuch?
+#####
+
+
+###  Clone  ###
+CLONE_SCRIPT = """#!/bin/bash
+# Auto-generated by allgit, see https://github.com/inventhouse/allgit
+# When run, repositories will be cloned if they don't already exist and the working branch will be checked out; bare repos will be mirrored.
+# Repositories and branches that were local to the original workareas are noted but elided.
+function clone_repo {{
+    if [ ! -e "$1/.git" ]; then
+        git clone "$2" "$1"
+        test "$3" && git -C "$1" checkout "$3"
+    else
+        echo "$1 exists, skipped"
+    fi
+}}
+function clone_bare {{
+    test -e "$1" && echo "$1 exists, skipped" || git clone --mirror "$2" "$1"
+}}
+###  Repositories  ###
+{repo_lines}
+#####
+"""
+CLONE_LINE = """{clone_func} "{repo}" "{url}" "{branch}"{comment}"""
+def clone_script_line(repo):
+    "Returns a line for a clone script based on details of a git repository."
+    clone_func = "clone_repo"
+    comment = ""
+    branch = repo_current_branch(repo) or ""
+
+    if repo_is_bare(repo):
+        clone_func = "clone_bare"
+        branch = ""  # Branch is ignored for bare repo clone
+
+    remotes = repo_remotes(repo)
+    if remotes:
+        rem = "origin" if "origin" in remotes else remotes[0]  # FIXME: is there a better way to pick a remote if origin is missing?
+        repo_url = repo_remote_url(repo, remote=rem)
+        if branch:
+            # Check that branch is available remotely for the script to check-out
+            rem_branch_cmd = ["git", "branch", "--list", "--remotes", "{}/{}".format(rem,branch)]
+            result = sub.run(rem_branch_cmd, cwd=repo, stdout=sub.PIPE, check=True)
+            if not result.stdout:
+                comment += "  # Local branch '{}' elided".format(branch)
+                branch = ""
+    else:
+        clone_func = "# " + clone_func
+        comment += "  # Local repo elided"
+        repo_url = "file://" + os.path.abspath(repo)
+
+    return CLONE_LINE.format(clone_func=clone_func, repo=repo, url=repo_url, branch=branch, comment=comment)
 #####
 
 
