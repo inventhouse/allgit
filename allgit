@@ -128,7 +128,7 @@ def main(args, env):
     xit = 0
     if cmd or my_args.clone_script or my_args.fetch or (my_args.branches and my_args.checkout):  # Only call run if there's something to do
         xit = repo_run(repos, cmd=cmd, fetch=my_args.fetch, branches=my_args.branches, checkout=my_args.checkout, script_out=my_args.clone_script)
-    print("Done.")
+    print(bold("Done."))
     return xit
 
 
@@ -154,7 +154,7 @@ def repo_run(repos, cmd=None, fetch=False, branches=None, checkout=False, script
         if cmd or print_cmd:  # Only print if doing something 'interesting'; skip printing if just generating clone_script
             if i > 0:
                 print("")  # Add a blank between repos if looping multiple times
-            print(f"-----  {r}  -----")
+            print(bold(f"-----  {r}  -----"))
         if fetch:
             fetch_cmd = ["git", "fetch"]
             ok = run_collect_error(r, fetch_cmd, errors, print_cmd=print_cmd)
@@ -186,19 +186,19 @@ def repo_run(repos, cmd=None, fetch=False, branches=None, checkout=False, script
 
     xit = 0
     if errors:
-        print("\nERRORS:", file=sys.stderr)
+        print("\n{}".format(bold("ERRORS:")), file=sys.stderr)
         for r in repos:
             if r not in errors:
                 continue
-            print(f"\t{r}:", file=sys.stderr)
+            print("\t{}".format(bold(r + ":")), file=sys.stderr)
             for c, e in errors[r]:
-                print("{}: {}".format(pretty_cmd(c), e.stderr.rstrip(b"\n").decode("utf-8")), file=sys.stderr)
+                print("{} {}".format(bold(pretty_cmd(c) + ":"), e.stderr.rstrip(b"\n").decode("utf-8")), file=sys.stderr)
                 xit = e.returncode  # Return the last error code 'cos pick one
 
     if script_out:
         script = CLONE_SCRIPT.format(repo_lines="\n".join(script_lines))
         if script_out is sys.stdout:
-            print("\nClone script:\n")
+            print("\n{}\n".format(bold("Clone script:")))
             script_out.write(script)
             print("")  # Add a newline so main's "Done" doesn't look like part of the script
         else:
@@ -213,7 +213,7 @@ def repo_run(repos, cmd=None, fetch=False, branches=None, checkout=False, script
 def run_collect_error(r, cmd, errors, print_cmd=False):
     "Runs a command and adds any error to the errors dictionary; returns True if the command was successful."
     if print_cmd:
-        print(pretty_cmd(cmd))
+        print(pretty_cmd(cmd, prompt=bold("$ ")))
     try:
         result = sub.run(cmd, cwd=r, stderr=sub.PIPE)  # Collect stderr so it can be printed at the end
     except FileNotFoundError as err:  # If the command is not found, this gets thrown instead of returning CP, so roll our own
@@ -366,6 +366,12 @@ def clone_script_line(repo):
         repo_url = "file://" + os.path.abspath(repo)
 
     return CLONE_LINE.format(clone_func=clone_func, repo=repo, url=repo_url, branch=branch, comment=comment)
+#####
+
+
+###  Colors  ###
+def bold(s):
+    return "\033[1m{}\033[0m".format(s)  # FIXME: figure out how to do this right (or at least only do it when supported by the output device)
 #####
 
 
