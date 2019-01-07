@@ -31,7 +31,7 @@ def main(args, env):
     \t{_name} -h/--help"""
     description = """Run a git command in all repositories in the current directory (or those specified); can also run other scripts or commands.
     """
-    epilog = """Allgit makes working with many git repositories easier, especially keeping them all up-to-date, managing branches between them, and making changes across multiple projects.  Example workflow and more in the accompanying allgit.md or online: https://github.com/inventhouse/BenBin/blob/master/allgit.md
+    epilog = """Allgit makes working with many git repositories easier, especially keeping them all up-to-date, managing branches between them, and making changes across multiple projects.  Example workflow and more in the accompanying allgit.md or online: https://github.com/inventhouse/allgit
     """
     parser = argparse.ArgumentParser(usage=usage, description=description, epilog=epilog)
     parser.add_argument(
@@ -83,6 +83,7 @@ def main(args, env):
         "--clone-script",
         nargs="?",
         const=sys.stdout,
+        metavar="SCRIPT.sh",
         help="Generate a bash script to reproduce this group of repositories; local repos and branches will be noted in the script but elided.  When the script is run, existing repos will be skipped; bare repos will be mirrored.",
     )
     parser.add_argument(
