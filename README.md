@@ -125,6 +125,8 @@ To Do
   - how to unit test all this?
   - add more tests as new features are added
 
+- trying to run existing script that lacks execute permission throws PermissionError
+
 - branch workflow
   - easy create, rebase, squash, push, fix, rebase, squash, push, eventually delete
     - maybe best done as a helper script?

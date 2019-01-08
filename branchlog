@@ -1,0 +1,26 @@
+#!/bin/bash
+
+# Prints log of all changes on the current branch back to the branch point
+# Copyright (c) 2019 Benjamin Holt -- MIT License
+
+if [ "$1" == "-h" -o "$1" == "--help" ]; then
+    cat <<USAGE
+usage: branchlog [PARENT]   Prints short logs of all changes on the current
+                            branch ending with the commit that was branched;
+                            PARENT defaults to "master".
+       branchlog -h|--help  Print this message and exit
+USAGE
+    exit 0
+fi
+
+Parent="${1:-master}"
+BranchName=`git rev-parse --abbrev-ref HEAD`
+
+if [ "$Parent" == "$BranchName" ]; then
+  echo "Cannot log $BranchName relative to itself" 1>&2
+  exit 1
+fi
+
+BranchPoint=`git merge-base "$Parent" "$BranchName"`
+git log "$BranchPoint~1..HEAD" --format=oneline --abbrev-commit  # Include branched commit
+###
