@@ -215,6 +215,7 @@ def run_collect_error(r, cmd, errors, print_cmd=False):
     if print_cmd:
         print(pretty_cmd(cmd, prompt=bold("$ ")))
     try:
+        sys.stdout.flush()
         result = sub.run(cmd, cwd=r, stderr=sub.PIPE)  # Collect stderr so it can be printed at the end
     except FileNotFoundError as err:  # If the command is not found, this gets thrown instead of returning CP, so roll our own
         result = sub.CompletedProcess(cmd, returncode=err.errno, stderr=err.strerror)
