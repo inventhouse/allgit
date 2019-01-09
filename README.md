@@ -149,6 +149,7 @@ To Do
     - mutually exclusive with --branches?
 - DONE: -m/--modified
 - -x/--exclude
+- -i/--include
 
 - format placeholders
   - PUNT: repo name? - no, can be extracted from dir
