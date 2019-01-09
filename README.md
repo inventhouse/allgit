@@ -92,8 +92,13 @@ Goals
 
 To Do
 -----
-- add bold to some of allgit output (like repo names)
-  - check terminal type / capabilities?  just interactive vs. not?  cross-platform compatibility?
+- DONE: add bold to some of allgit output (like repo names)
+  - DONE: check terminal type / capabilities - use tput, sys.stdout.isatty()
+  - DONE: check for tput with shutil.which
+  - DONE: test tput with `$ TERM=dumb ag - status -s`
+    - `$ tput km` - has meta key, bool, true on mac, false on dumb
+    - `$ tput hc` - hardcopy, bool, false on mac, false on dumb
+    - blue text: `{tput('setaf', 4)}`, modes off: `{tput('sgr0')}`
 
 - DONE: clone
   - DONE: make script
@@ -125,7 +130,8 @@ To Do
   - how to unit test all this?
   - add more tests as new features are added
 
-- trying to run existing script that lacks execute permission throws PermissionError
+- more/better error handling (catch exceptions and do something nicer with them)
+  - DONE: trying to run existing script that lacks execute permission throws PermissionError
 
 - branch workflow
   - easy create, rebase, squash, push, fix, rebase, squash, push, eventually delete

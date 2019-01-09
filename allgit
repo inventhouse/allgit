@@ -9,6 +9,7 @@ import os
 import os.path
 from pathlib import PurePath
 import re
+import shutil
 import subprocess as sub  # FIXME: proper version check since sub.run is >=3.5?
 import sys
 #####
@@ -128,7 +129,7 @@ def main(args, env):
     xit = 0
     if cmd or my_args.clone_script or my_args.fetch or (my_args.branches and my_args.checkout):  # Only call run if there's something to do
         xit = repo_run(repos, cmd=cmd, fetch=my_args.fetch, branches=my_args.branches, checkout=my_args.checkout, script_out=my_args.clone_script)
-    print(bold("Done."))
+    print(f"{tput('bold')}Done.{tput('sgr0')}")
     return xit
 
 
@@ -154,7 +155,7 @@ def repo_run(repos, cmd=None, fetch=False, branches=None, checkout=False, script
         if cmd or print_cmd:  # Only print if doing something 'interesting'; skip printing if just generating clone_script
             if i > 0:
                 print("")  # Add a blank between repos if looping multiple times
-            print(bold(f"-----  {r}  -----"))
+            print(f"{tput('bold')}-----  {r}  -----{tput('sgr0')}")
         if fetch:
             fetch_cmd = ["git", "fetch"]
             ok = run_collect_error(r, fetch_cmd, errors, print_cmd=print_cmd)
@@ -186,19 +187,20 @@ def repo_run(repos, cmd=None, fetch=False, branches=None, checkout=False, script
 
     xit = 0
     if errors:
-        print("\n{}".format(bold("ERRORS:")), file=sys.stderr)
+        print(f"\n{tput('bold')}ERRORS:{tput('sgr0')}", file=sys.stderr)
         for r in repos:
             if r not in errors:
                 continue
-            print("\t{}".format(bold(r + ":")), file=sys.stderr)
+            print(f"\t{tput('bold')}{r}:{tput('sgr0')}", file=sys.stderr)
             for c, e in errors[r]:
-                print("{} {}".format(bold(pretty_cmd(c) + ":"), e.stderr.rstrip(b"\n").decode("utf-8")), file=sys.stderr)
+                err = e.stderr.rstrip("\n")
+                print(f"{tput('bold')}{pretty_cmd(c)}:{tput('sgr0')} {err}", file=sys.stderr)
                 xit = e.returncode  # Return the last error code 'cos pick one
 
     if script_out:
         script = CLONE_SCRIPT.format(repo_lines="\n".join(script_lines))
         if script_out is sys.stdout:
-            print("\n{}\n".format(bold("Clone script:")))
+            print(f"\n{tput('bold')}Clone script:{tput('sgr0')}\n")
             script_out.write(script)
             print("")  # Add a newline so main's "Done" doesn't look like part of the script
         else:
@@ -213,18 +215,20 @@ def repo_run(repos, cmd=None, fetch=False, branches=None, checkout=False, script
 def run_collect_error(r, cmd, errors, print_cmd=False):
     "Runs a command and adds any error to the errors dictionary; returns True if the command was successful."
     if print_cmd:
-        print(pretty_cmd(cmd, prompt=bold("$ ")))
+        print(pretty_cmd(cmd, prompt=f"{tput('bold')}$ {tput('sgr0')}"))
     try:
         sys.stdout.flush()
         result = sub.run(cmd, cwd=r, stderr=sub.PIPE)  # Collect stderr so it can be printed at the end
-    except FileNotFoundError as err:  # If the command is not found, this gets thrown instead of returning CP, so roll our own
+    except (FileNotFoundError, PermissionError) as err:  # If the command is not found or lacks execute permission, an error gets thrown instead of returning CP, so roll our own
         result = sub.CompletedProcess(cmd, returncode=err.errno, stderr=err.strerror)
+    else:
+        result.stderr = result.stderr.decode("utf-8")  # Normalize stderr to string instead of bytes
 
     if result.returncode != 0:
         if r not in errors:
             errors[r] = []
         errors[r] += [(cmd, result),]
-        print(result.stderr.rstrip(b"\n").decode("utf-8"), file=sys.stderr)
+        print(result.stderr.rstrip("\n"), file=sys.stderr)
 
         return False
     return True
@@ -371,8 +375,39 @@ def clone_script_line(repo):
 
 
 ###  Colors  ###
-def bold(s):
-    return "\033[1m{}\033[0m".format(s)  # FIXME: figure out how to do this right (or at least only do it when supported by the output device)
+# Here's a nice tutorial on tput: http://www.linuxcommand.org/lc3_adv_tput.php
+class Tput:
+    "Wrapper for tput command, caches replies."
+    def __init__(self):
+        self.replies = {}
+
+
+    def __call__(self, dummy):
+        "Decorator to replace a dummy implementation with calls to tput if appropreate and available"
+        if sys.stdout.isatty() and shutil.which("tput"):
+            return self.lookup
+        else:
+            return dummy
+
+
+    def lookup(self, capname, *params):
+        "Get the value for a capname from tput, see man tput for more information"
+        if capname not in self.replies:
+            tp_cmd = ["tput", capname]
+            if params:
+                tp_cmd.extend([ str(p) for p in params ])
+            result = sub.run(tp_cmd, stdout=sub.PIPE)
+            r = ""  # Default to falsey
+            if result.returncode == 0:  # If success, capability exists or property is true
+                r = result.stdout.decode("utf-8") or True  # FIXME: should convert numeric replies
+            self.replies[capname] = r
+        return self.replies[capname]
+
+
+@Tput()
+def tput(capname, *params):
+    "Dummy tput implementation, just returns empty string for now"
+    return ""  # FIXME: this might not make much sense for some things (eg "cols"), so set up dummy replies with default values
 #####
 
 
