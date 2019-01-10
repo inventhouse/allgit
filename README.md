@@ -92,24 +92,6 @@ Goals
 
 To Do
 -----
-- DONE: add bold to some of allgit output (like repo names)
-  - DONE: check terminal type / capabilities - use tput, sys.stdout.isatty()
-  - DONE: check for tput with shutil.which
-  - DONE: test tput with `$ TERM=dumb ag - status -s`
-    - `$ tput km` - has meta key, bool, true on mac, false on dumb
-    - `$ tput hc` - hardcopy, bool, false on mac, false on dumb
-    - blue text: `{tput('setaf', 4)}`, modes off: `{tput('sgr0')}`
-
-- DONE: clone
-  - DONE: make script
-    - DONE: script should handle not cloning repos that already exist
-    - DONE: clone script should re-create heirarchies
-    - DONE: standalone - script shouldn't depend on allgit or other things
-  - PUNT: auto-find github/gitlab repos for a given org/user/whatever?
-    - list?
-    - matching?
-    - exclude?
-
 - docs
   - DONE: intro
   - DONE: example workflow
@@ -118,8 +100,10 @@ To Do
   - -c and -f
   - commands and scripts
     - other scripts in this repo
-  - tricks?  (eg printing branches with -f)
+  - tricks?  (eg printing branches with -f, shell globbing)
   - perhaps extended tutorial with more concrete use-cases?
+  - nitty-gritty details
+    - path normalization (all paths that point to the same file get normalized to the first version)
 
 - more testing
   - create test assets
@@ -129,9 +113,11 @@ To Do
   - symlinks? (dunno if following them is a good idea or not, but should doc either way)
   - how to unit test all this?
   - add more tests as new features are added
+  - test symlinks vs. find_repos vs. --exclude vs. doing the same repo twice
 
 - more/better error handling (catch exceptions and do something nicer with them)
   - DONE: trying to run existing script that lacks execute permission throws PermissionError
+- --abort - stop-on-error
 
 - branch workflow
   - easy create, rebase, squash, push, fix, rebase, squash, push, eventually delete
@@ -148,8 +134,13 @@ To Do
     - should this have a checkout mode too?
     - mutually exclusive with --branches?
 - DONE: -m/--modified
-- -x/--exclude
-- -i/--include
+- -i/--include - add extra repos after -b/t/m
+- -x/--exclude - do not work on these repos no matter what
+  - -x mustn't be fooled by foo vs. ./foo vs. foo/ vs. ../here/foo; maybe even symlinks too ...
+- --dry-run - offer a way to check that -x is protecting it's repos
+- --list - just list repositories, quoted and space-separated so you could drop them into -i/-x and get nearly full combination operations using subshell invocations
+    - prolly need -q/--quiet for this
+- --exists - run the command if it can be found, for running scripts that some of your repos have versions of (pleasemake is a better way to do this, but requires makefile)
 
 - format placeholders
   - PUNT: repo name? - no, can be extracted from dir
@@ -206,6 +197,24 @@ To Do
 
 - PUNT: see if we can pass through git colors -- they come through inherited fds
 - NO: 'parsable' output option? -- no control over underlying command output
+
+- DONE: add bold to some of allgit output (like repo names)
+  - DONE: check terminal type / capabilities - use tput, sys.stdout.isatty()
+  - DONE: check for tput with shutil.which
+  - DONE: test tput with `$ TERM=dumb ag - status -s`
+    - `$ tput km` - has meta key, bool, true on mac, false on dumb
+    - `$ tput hc` - hardcopy, bool, false on mac, false on dumb
+    - blue text: `{tput('setaf', 4)}`, modes off: `{tput('sgr0')}`
+
+- DONE: clone
+  - DONE: make script
+    - DONE: script should handle not cloning repos that already exist
+    - DONE: clone script should re-create heirarchies
+    - DONE: standalone - script shouldn't depend on allgit or other things
+  - PUNT: auto-find github/gitlab repos for a given org/user/whatever?
+    - list?
+    - matching?
+    - exclude?
 
 
 ---

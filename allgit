@@ -63,6 +63,20 @@ def main(args, env):
         action="store_true",
         help="Only work on repositories with local changes (not including untracked files).",
     )
+    # parser.add_argument(  # TODO: Comimng Soon
+    #     "-i", "--include",
+    #     nargs="+",
+    #     default=[],
+    #     metavar="DIR",
+    #     help="Add repos in these directories after other filters have been applied.",
+    # )
+    parser.add_argument(
+        "-x", "--exclude",
+        nargs="+",
+        default=[],
+        metavar="DIR",
+        help="Do not work on repos in these directories, even if they were specifically included.",
+    )
     parser.add_argument(
         "-d", "--depth",
         type=int,
@@ -114,9 +128,18 @@ def main(args, env):
     if my_args.branches and not my_args.fetch:
         repos = [ r for r in repos if repo_branches(r, my_args.branches) ]  # Pre-filter for repos with the branches (repo_run will end up re-checking the branches, but that's pretty quick and I don't see a clean way to avoid that)
 
+    exclude_repos = []
+    for d in my_args.exclude:
+        exclude_repos.extend(find_repos(d, depth=my_args.depth, subrepos=my_args.subrepos))
+
+    normalize_paths(repos, exclude_repos)
+    repos = [ r for r in repos if r not in exclude_repos ]
+
     if my_args.print_args:
         print(f"* Args:\n\t{my_args}\n* Command:\n\t{cmd}")
         print(f"* Found Repos:\n\t{found_repos}")
+        if exclude_repos:
+            print(f"* Excluded Repos:\n\t{exclude_repos}")
         if repos != found_repos:
             print(f"* Filtered Repos:\n\t{repos}")
         return 0
@@ -128,7 +151,7 @@ def main(args, env):
 
     xit = 0
     if cmd or my_args.clone_script or my_args.fetch or (my_args.branches and my_args.checkout):  # Only call run if there's something to do
-        xit = repo_run(repos, cmd=cmd, fetch=my_args.fetch, branches=my_args.branches, checkout=my_args.checkout, script_out=my_args.clone_script)
+        xit = repo_loop(repos, cmd=cmd, fetch=my_args.fetch, branches=my_args.branches, checkout=my_args.checkout, script_out=my_args.clone_script)
     print(f"{tput('bold')}Done.{tput('sgr0')}")
     return xit
 
@@ -145,44 +168,27 @@ def split_args(args, delims=("--",)):
     return (before, indexes[i], after)
 
 
-def repo_run(repos, cmd=None, fetch=False, branches=None, checkout=False, script_out=None):
-    "Run the commands in the repos, including optional fetch, branch-check, and checkout; also handle printing and errors."
-    # FIXME: This is getting long and twisty, try to clean it up; perhaps rewrite to take a callable instead of cmd?  refactor fetch/checkout/etc logic out and separate out different actions cmd vs. script?
+def repo_loop(repos, cmd=None, fetch=False, branches=None, checkout=False, script_out=None):
+    "Run the commands in the repos, also handle clone script and errors."
+    # FIXME: Somewhat better, but still twisty
     script_lines = []
     print_cmd = (fetch or checkout)  # Print "active" commands if running more than just the user command
     errors = {}  # {repo: [(command, error), ...], ...}
-    for i,r in enumerate(repos):
+    first_print = True
+    seen_repos = set()
+    for r in repos:
+        if r in seen_repos:
+            continue  # Never do the same repo twice
+        seen_repos.add(r)
+
         if cmd or print_cmd:  # Only print if doing something 'interesting'; skip printing if just generating clone_script
-            if i > 0:
+            if not first_print:
                 print("")  # Add a blank between repos if looping multiple times
             print(f"{tput('bold')}-----  {r}  -----{tput('sgr0')}")
-        if fetch:
-            fetch_cmd = ["git", "fetch"]
-            ok = run_collect_error(r, fetch_cmd, errors, print_cmd=print_cmd)
-            if not ok:
-                continue
+            first_print = False
 
-        found_branches = None
-        if branches:
-            found_branches = repo_branches(r, branches)
-        if branches and not found_branches:  # REM: this won't come up if repos were pre-filtered
-            print("Branches not found, skipping")
-            continue
-        if fetch and found_branches:  # Only print if branches might be newly-found
-            print(f"Found branches: {', '.join(found_branches)}")
-
-        if checkout and found_branches:
-            checkout_cmd = ["git", "checkout", found_branches[-1]]
-            ok = run_collect_error(r, checkout_cmd, errors, print_cmd=print_cmd)
-            if not ok:
-                continue
-
-        if cmd:
-            ok = run_collect_error(r, cmd, errors, print_cmd=print_cmd)
-            if not ok:
-                continue  # REM: Not strictly necessary here, but maintains the pattern
-
-        if script_out:
+        ran = repo_run(r, errors, cmd=cmd, fetch=fetch, branches=branches, checkout=checkout)
+        if ran and script_out:
             script_lines.append(clone_script_line(r))
 
     xit = 0
@@ -197,10 +203,13 @@ def repo_run(repos, cmd=None, fetch=False, branches=None, checkout=False, script
                 print(f"{tput('bold')}{pretty_cmd(c)}:{tput('sgr0')} {err}", file=sys.stderr)
                 xit = e.returncode  # Return the last error code 'cos pick one
 
-    if script_out:
+    if script_out and script_lines:
         script = CLONE_SCRIPT.format(repo_lines="\n".join(script_lines))
         if script_out is sys.stdout:
-            print(f"\n{tput('bold')}Clone script:{tput('sgr0')}\n")
+            if not first_print:
+                print("")  # Add a blank to separate from earlier output
+            print(f"{tput('bold')}Clone script:{tput('sgr0')}\n")
+            first_print = False
             script_out.write(script)
             print("")  # Add a newline so main's "Done" doesn't look like part of the script
         else:
@@ -210,6 +219,39 @@ def repo_run(repos, cmd=None, fetch=False, branches=None, checkout=False, script
             print("Clone script saved as {}".format(script_out))
 
     return xit
+
+
+def repo_run(repo, errors, cmd=None, fetch=False, branches=None, checkout=False):
+    "Run commands in a repo, including optional fetch, branch-check, and checkout; also print commands when appropreate."
+    # FIXME: Somewhat better, but still twisty
+    print_cmd = (fetch or checkout)  # Print "active" commands if running more than just the user command
+    if fetch:
+        fetch_cmd = ["git", "fetch"]
+        ok = run_collect_error(repo, fetch_cmd, errors, print_cmd=print_cmd)
+        if not ok:
+            return False
+
+    found_branches = None
+    if branches:
+        found_branches = repo_branches(repo, branches)
+    if branches and not found_branches:  # REM: this won't come up if repos were pre-filtered
+        print("Branches not found, skipping")
+        return False
+    if fetch and found_branches:  # Only print if branches might be newly-found
+        print(f"Found branches: {', '.join(found_branches)}")
+
+    if checkout and found_branches:
+        checkout_cmd = ["git", "checkout", found_branches[-1]]
+        ok = run_collect_error(repo, checkout_cmd, errors, print_cmd=print_cmd)
+        if not ok:
+            return False
+
+    if cmd:
+        ok = run_collect_error(repo, cmd, errors, print_cmd=print_cmd)
+        if not ok:
+            return False  # REM: Not strictly necessary here, but maintains the pattern
+
+    return True
 
 
 def run_collect_error(r, cmd, errors, print_cmd=False):
@@ -234,6 +276,23 @@ def run_collect_error(r, cmd, errors, print_cmd=False):
     return True
 
 
+def normalize_paths(*file_lists):
+    "Takes lists of paths and in-place normalizes names so items that point to the same file now have the same path between all the lists"
+    canonical_pairs = []  # [(name, stat),...]
+    def canonical_name(f):
+        "Take a file and search the canonical pairs for a matching stat and return the canonical name; if not found this file and stat are added to the canonical pairs and the original file is returned"
+        fs = os.stat(f)
+        for cn, cs in canonical_pairs:
+            if os.path.samestat(fs, cs):
+                return cn
+        else:
+            canonical_pairs.append((f, fs))
+            return f
+
+    for l in file_lists:
+        l[:] = [ canonical_name(n) for n in l ]
+
+
 def pretty_cmd(c, prompt="$ "):
     "Format a command with a pseudo-prompt for display."
     return "{}{}".format(prompt, " ".join(c))
@@ -248,7 +307,7 @@ def find_repos(root, depth=1, subrepos=False):
     for current, dirs, files in os.walk(root):  # TODO: Maybe 'in/exclude' pattern option?
         is_bare_repo = repo_is_bare(current)
         if is_bare_repo or ".git" in dirs:
-            repos.append(current)
+            repos.append(os.path.normpath(current))
             dirs[:] = [ d for d in dirs if subrepos and not is_bare_repo and d != ".git" ]  # If searching for subrepos, don't search bare repos or .git
             continue
 
