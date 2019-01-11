@@ -17,7 +17,7 @@ import sys
 
 ###  Main  ###
 _name = "allgit"
-_version = "v0.6"
+_version = "v0.7"
 
 def main(args, env):
     "Handle arguments, etc."
@@ -63,13 +63,13 @@ def main(args, env):
         action="store_true",
         help="Only work on repositories with local changes (not including untracked files).",
     )
-    # parser.add_argument(  # TODO: Comimng Soon
-    #     "-i", "--include",
-    #     nargs="+",
-    #     default=[],
-    #     metavar="DIR",
-    #     help="Add repos in these directories after other filters have been applied.",
-    # )
+    parser.add_argument(
+        "-i", "--include",
+        nargs="+",
+        default=[],
+        metavar="DIR",
+        help="Add repos in these directories after other filters have been applied.",
+    )
     parser.add_argument(
         "-x", "--exclude",
         nargs="+",
@@ -120,20 +120,24 @@ def main(args, env):
     found_repos = []
     for d in my_args.dirs:
         found_repos.extend(find_repos(d, depth=my_args.depth, subrepos=my_args.subrepos))
-    repos = found_repos
+
+    include_repos = []
+    for d in my_args.include:
+        include_repos.extend(find_repos(d, depth=my_args.depth, subrepos=my_args.subrepos))
+
+    exclude_repos = []
+    for d in my_args.exclude:
+        exclude_repos.extend(find_repos(d, depth=my_args.depth, subrepos=my_args.subrepos))
+
+    normalize_paths(found_repos, include_repos, exclude_repos)
+    repos = [ r for r in found_repos if r not in exclude_repos ]
+    clean_include_repos = [ r for r in include_repos if r not in exclude_repos ]  # Keep these separate and not subject to the same filters as repos; keep original list for messaging if all repos are filtered/excluded
 
     if my_args.modified:
         repos = [ r for r in repos if repo_changes(r) ]
 
     if my_args.branches and not my_args.fetch:
         repos = [ r for r in repos if repo_branches(r, my_args.branches) ]  # Pre-filter for repos with the branches (repo_run will end up re-checking the branches, but that's pretty quick and I don't see a clean way to avoid that)
-
-    exclude_repos = []
-    for d in my_args.exclude:
-        exclude_repos.extend(find_repos(d, depth=my_args.depth, subrepos=my_args.subrepos))
-
-    normalize_paths(repos, exclude_repos)
-    repos = [ r for r in repos if r not in exclude_repos ]
 
     if my_args.print_args:
         print(f"* Args:\n\t{my_args}\n* Command:\n\t{cmd}")
@@ -142,16 +146,18 @@ def main(args, env):
             print(f"* Excluded Repos:\n\t{exclude_repos}")
         if repos != found_repos:
             print(f"* Filtered Repos:\n\t{repos}")
+        if clean_include_repos:
+            print(f"* Included Repos:\n\t{clean_include_repos}")
         return 0
 
-    if not found_repos:
+    if not found_repos and not clean_include_repos:
         return "Error: found no repositories"
-    if not repos:
-        return f"Error: found {len(found_repos)} repositories but all were filtered out"  # REM: error seems harsh for things like -m which might legitimately filter all repos
+    if not repos and not clean_include_repos:
+        return f"Error: found {len(set(found_repos + include_repos))} repositories but all were filtered out"  # REM: error seems harsh for things like -m which might legitimately filter all repos
 
     xit = 0
     if cmd or my_args.clone_script or my_args.fetch or (my_args.branches and my_args.checkout):  # Only call run if there's something to do
-        xit = repo_loop(repos, cmd=cmd, fetch=my_args.fetch, branches=my_args.branches, checkout=my_args.checkout, script_out=my_args.clone_script)
+        xit = repo_loop(repos, cmd=cmd, fetch=my_args.fetch, branches=my_args.branches, checkout=my_args.checkout, include_repos=clean_include_repos, script_out=my_args.clone_script)
     print(f"{tput('bold')}Done.{tput('sgr0')}")
     return xit
 
@@ -168,26 +174,36 @@ def split_args(args, delims=("--",)):
     return (before, indexes[i], after)
 
 
-def repo_loop(repos, cmd=None, fetch=False, branches=None, checkout=False, script_out=None):
+def repo_loop(repos, cmd=None, fetch=False, branches=None, checkout=False, include_repos=[], script_out=None):
     "Run the commands in the repos, also handle clone script and errors."
     # FIXME: Somewhat better, but still twisty
     script_lines = []
-    print_cmd = (fetch or checkout)  # Print "active" commands if running more than just the user command
     errors = {}  # {repo: [(command, error), ...], ...}
     first_print = True
-    seen_repos = set()
-    for r in repos:
-        if r in seen_repos:
-            continue  # Never do the same repo twice
-        seen_repos.add(r)
-
-        if cmd or print_cmd:  # Only print if doing something 'interesting'; skip printing if just generating clone_script
+    def print_header(r):
+        nonlocal first_print
+        if fetch or checkout or cmd:  # Only print if doing something 'interesting'; skip printing if just generating clone_script
             if not first_print:
                 print("")  # Add a blank between repos if looping multiple times
             print(f"{tput('bold')}-----  {r}  -----{tput('sgr0')}")
             first_print = False
 
+    seen_repos = set()
+    for r in repos:
+        if r in seen_repos:
+            continue  # Never do the same repo twice
+        seen_repos.add(r)
+        print_header(r)
         ran = repo_run(r, errors, cmd=cmd, fetch=fetch, branches=branches, checkout=checkout)
+        if ran and script_out:
+            script_lines.append(clone_script_line(r))
+
+    for r in include_repos:  # FIXME: mostly duplicated code from above :-/
+        if r in seen_repos:
+            continue  # Never do the same repo twice
+        seen_repos.add(r)
+        print_header(r)
+        ran = repo_run(r, errors, cmd=cmd, fetch=fetch)  # "Included" repos are not subject to branch checks so omit branches and checkout (the latter doesn't apply if no branches are requested)
         if ran and script_out:
             script_lines.append(clone_script_line(r))
 

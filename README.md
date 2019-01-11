@@ -104,6 +104,7 @@ To Do
   - perhaps extended tutorial with more concrete use-cases?
   - nitty-gritty details
     - path normalization (all paths that point to the same file get normalized to the first version)
+    - symlinks are not followed by find, but are by normalizer
 
 - more testing
   - create test assets
@@ -134,13 +135,14 @@ To Do
     - should this have a checkout mode too?
     - mutually exclusive with --branches?
 - DONE: -m/--modified
-- -i/--include - add extra repos after -b/t/m
-- -x/--exclude - do not work on these repos no matter what
-  - -x mustn't be fooled by foo vs. ./foo vs. foo/ vs. ../here/foo; maybe even symlinks too ...
+- DONE: -i/--include - add extra repos after -b/t/m
+- DONE: -x/--exclude - do not work on these repos no matter what
+  - DONE: -x mustn't be fooled by foo vs. ./foo vs. foo/ vs. ../here/foo; maybe even symlinks too ...
 - --dry-run - offer a way to check that -x is protecting it's repos
 - --list - just list repositories, quoted and space-separated so you could drop them into -i/-x and get nearly full combination operations using subshell invocations
     - prolly need -q/--quiet for this
 - --exists - run the command if it can be found, for running scripts that some of your repos have versions of (pleasemake is a better way to do this, but requires makefile)
+- -l/--follow-symlinks - option to traverse symlinks during find_repos
 
 - format placeholders
   - PUNT: repo name? - no, can be extracted from dir
