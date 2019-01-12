@@ -102,6 +102,11 @@ def main(args, env):
         help="Generate a bash script to reproduce this group of repositories; local repos and branches will be noted in the script but elided.  When the script is run, existing repos will be skipped; bare repos will be mirrored.",
     )
     parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Only run non-destructive commands and print what would have been done; repositories may be fetched, but branches will not be checked out and the sepecified command will not be run.",
+    )
+    parser.add_argument(
         "--print-args",
         action="store_true",
         help="Print allgit arguments, command, and repos, then exit.",
@@ -157,7 +162,7 @@ def main(args, env):
 
     xit = 0
     if cmd or my_args.clone_script or my_args.fetch or (my_args.branches and my_args.checkout):  # Only call run if there's something to do
-        xit = repo_loop(repos, cmd=cmd, fetch=my_args.fetch, branches=my_args.branches, checkout=my_args.checkout, include_repos=clean_include_repos, script_out=my_args.clone_script)
+        xit = repo_loop(repos, cmd=cmd, fetch=my_args.fetch, branches=my_args.branches, checkout=my_args.checkout, dry_run=my_args.dry_run, include_repos=clean_include_repos, script_out=my_args.clone_script)
     print(f"{tput('bold')}Done.{tput('sgr0')}")
     return xit
 
@@ -174,7 +179,7 @@ def split_args(args, delims=("--",)):
     return (before, indexes[i], after)
 
 
-def repo_loop(repos, cmd=None, fetch=False, branches=None, checkout=False, include_repos=[], script_out=None):
+def repo_loop(repos, cmd=None, fetch=False, branches=None, checkout=False, dry_run=False, include_repos=[], script_out=None):
     "Run the commands in the repos, also handle clone script and errors."
     # FIXME: Somewhat better, but still twisty
     script_lines = []
@@ -185,7 +190,7 @@ def repo_loop(repos, cmd=None, fetch=False, branches=None, checkout=False, inclu
         if fetch or checkout or cmd:  # Only print if doing something 'interesting'; skip printing if just generating clone_script
             if not first_print:
                 print("")  # Add a blank between repos if looping multiple times
-            print(f"{tput('bold')}-----  {r}  -----{tput('sgr0')}")
+            print(f"{tput('bold')}------  {r}  ------{tput('sgr0')}")
             first_print = False
 
     seen_repos = set()
@@ -194,7 +199,7 @@ def repo_loop(repos, cmd=None, fetch=False, branches=None, checkout=False, inclu
             continue  # Never do the same repo twice
         seen_repos.add(r)
         print_header(r)
-        ran = repo_run(r, errors, cmd=cmd, fetch=fetch, branches=branches, checkout=checkout)
+        ran = repo_run(r, errors, cmd=cmd, fetch=fetch, branches=branches, checkout=checkout, dry_run=dry_run)
         if ran and script_out:
             script_lines.append(clone_script_line(r))
 
@@ -203,7 +208,7 @@ def repo_loop(repos, cmd=None, fetch=False, branches=None, checkout=False, inclu
             continue  # Never do the same repo twice
         seen_repos.add(r)
         print_header(r)
-        ran = repo_run(r, errors, cmd=cmd, fetch=fetch)  # "Included" repos are not subject to branch checks so omit branches and checkout (the latter doesn't apply if no branches are requested)
+        ran = repo_run(r, errors, cmd=cmd, fetch=fetch, dry_run=dry_run)  # "Included" repos are not subject to branch checks so omit branches and checkout (the latter doesn't apply if no branches are requested)
         if ran and script_out:
             script_lines.append(clone_script_line(r))
 
@@ -237,7 +242,7 @@ def repo_loop(repos, cmd=None, fetch=False, branches=None, checkout=False, inclu
     return xit
 
 
-def repo_run(repo, errors, cmd=None, fetch=False, branches=None, checkout=False):
+def repo_run(repo, errors, cmd=None, fetch=False, branches=None, checkout=False, dry_run=False):
     "Run commands in a repo, including optional fetch, branch-check, and checkout; also print commands when appropreate."
     # FIXME: Somewhat better, but still twisty
     print_cmd = (fetch or checkout)  # Print "active" commands if running more than just the user command
@@ -258,29 +263,31 @@ def repo_run(repo, errors, cmd=None, fetch=False, branches=None, checkout=False)
 
     if checkout and found_branches:
         checkout_cmd = ["git", "checkout", found_branches[-1]]
-        ok = run_collect_error(repo, checkout_cmd, errors, print_cmd=print_cmd)
+        ok = run_collect_error(repo, checkout_cmd, errors, print_cmd=print_cmd, dry_run=dry_run)
         if not ok:
             return False
 
     if cmd:
-        ok = run_collect_error(repo, cmd, errors, print_cmd=print_cmd)
+        ok = run_collect_error(repo, cmd, errors, print_cmd=print_cmd, dry_run=dry_run)
         if not ok:
-            return False  # REM: Not strictly necessary here, but maintains the pattern
+            return False
 
     return True
 
 
-def run_collect_error(r, cmd, errors, print_cmd=False):
+def run_collect_error(r, cmd, errors, print_cmd=False, dry_run=False):
     "Runs a command and adds any error to the errors dictionary; returns True if the command was successful."
+    if dry_run:
+        print(pretty_cmd(cmd, prompt=f"{tput('bold')}DRY $ {tput('sgr0')}"))
+        return True
     if print_cmd:
         print(pretty_cmd(cmd, prompt=f"{tput('bold')}$ {tput('sgr0')}"))
     try:
         sys.stdout.flush()
         result = sub.run(cmd, cwd=r, stderr=sub.PIPE)  # Collect stderr so it can be printed at the end
-    except (FileNotFoundError, PermissionError) as err:  # If the command is not found or lacks execute permission, an error gets thrown instead of returning CP, so roll our own
-        result = sub.CompletedProcess(cmd, returncode=err.errno, stderr=err.strerror)
-    else:
         result.stderr = result.stderr.decode("utf-8")  # Normalize stderr to string instead of bytes
+    except OSError as err:  # If the command is not executable or has other issues, an error gets thrown instead of returning CP, so roll our own
+        result = sub.CompletedProcess(cmd, returncode=err.errno, stderr=err.strerror)
 
     if result.returncode != 0:
         if r not in errors:
@@ -329,7 +336,6 @@ def find_repos(root, depth=1, subrepos=False):
         current_depth = len(PurePath(current).parts)
         if depth >= 0 and current_depth - start_depth >= depth:
             dirs[:] = []  # Don't descend any deeper
-            continue
 
     return sorted(repos)
 

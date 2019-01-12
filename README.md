@@ -138,7 +138,7 @@ To Do
 - DONE: -i/--include - add extra repos after -b/t/m
 - DONE: -x/--exclude - do not work on these repos no matter what
   - DONE: -x mustn't be fooled by foo vs. ./foo vs. foo/ vs. ../here/foo; maybe even symlinks too ...
-- --dry-run - offer a way to check that -x is protecting it's repos
+- DONE: --dry-run - offer a way to check that -x is protecting it's repos
 - --list - just list repositories, quoted and space-separated so you could drop them into -i/-x and get nearly full combination operations using subshell invocations
     - prolly need -q/--quiet for this
 - --exists - run the command if it can be found, for running scripts that some of your repos have versions of (pleasemake is a better way to do this, but requires makefile)
