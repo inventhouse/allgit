@@ -325,7 +325,6 @@ def find_repos(root, depth=1, subrepos=False):
         if is_bare_repo or ".git" in dirs:
             repos.append(os.path.normpath(current))
             dirs[:] = [ d for d in dirs if subrepos and not is_bare_repo and d != ".git" ]  # If searching for subrepos, don't search bare repos or .git
-            continue
 
         current_depth = len(PurePath(current).parts)
         if depth >= 0 and current_depth - start_depth >= depth:
