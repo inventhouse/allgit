@@ -11,11 +11,11 @@ Setup
 -----
 Allgit expects to find Python 3.5+ in the path as `python3`; personally, I like the [Anaconda distribution](https://www.anaconda.com/download/) to bring macOS into the modern age.
 
-Although allgit is self-contained other than the Python standard libraries, cloning this repository is recommended so it can be kept up-to-date:
+Although allgit is self-contained other than the Python standard library, there are also some scripts to add additional functionality, so cloning this repository is recommended so it can all be kept up-to-date:
 
 `$ git clone https://github.com/inventhouse/allgit.git`
 
-It can then be added to the path and/or aliased to make it as easy to use as possible; add these to your `~/.bash_profile` or preferred shell's config file:
+The allgit directory can then be added to the path and the command aliased to make it as easy to use as possible; add these to your `~/.bash_profile` or preferred shell's config file:
 
 `PATH=$PATH:/path/to/allgit`
 
@@ -44,9 +44,21 @@ More on Branches
 ----------------
 Branches are integral to change management in git; it turns out that feature and release branches are a very natural way to group projects that allgit should work on together.  On the flip side, allgit makes it very easy make consistent branches among related projects.
 
-_(( Work in some of the ways we can create branches based on previous branches or collections of branches and the like ))_
+For example, if some of our repositories need to branch for release together, we can use an earlier release branch to create the new one; first, make sure they're all on the same branch and up-to-date:
 
-In fact, it can be useful to, judiciously, make branches for the sole purpose grouping repositories; allgit's `--branches` filter just checks if any of the desired branches exist, they don't have to be checked out.
+```
+$ allgit -b past_release - checkout master
+$ allgit -b past_release - pull
+```
+
+Then, create the new release branch and push it up:
+
+```
+$ allgit -b past_release - checkout -b new_release
+$ allgit -b past_release - push -u origin new_release
+```
+
+In fact, it can be useful to, judiciously, make branches for the sole purpose grouping repositories; allgit's `-b/--branches` filter just checks if any of the desired branches exist, they don't have to be checked out.
 
 On the other hand, we often work with varied repositories that may branch for release on different schedules or come from multiple sources which may have differing branching and naming practices.
 
@@ -67,15 +79,30 @@ So, if we run it in a directory with some repositories cloned as immediate child
 
 To search deeper, maybe we keep our repos organized in folders, we can specify those directories to search or give a`--depth` (`-d`); note it still doesn't search inside repositories unless we pass `--subrepos`.  To _really_ find them all `--recursive` (`-r`) searches to an unlimited depth and looks for subrepos.
 
-Often, though, we want to be a bit more selective about which repos we work on.  First, we can simply give a list on the command line, but that could be tedious or error-prone.  _(( On the other hand, work in how shell globbing can be a powerful tool ))_
+Often, though, we want to be a bit more selective about which repos we work on.  First, we can simply give a list on the command line; while that could be tedious or error-prone, the shell's "wildcard" (or "globbing") feature can be really useful.  For example, to work only on "bare" repositories in the current directory:
 
-Allgit offers a couple simple filters, in addition to `--branches` covered above, `--modified` (`-m`) will select only repositories with local modifications.
+`$ allgit *.git - fetch`
+
+Allgit also offers a couple git-related filters, in addition to `--branches` covered above, `--modified` (`-m`) will select only repositories with local modifications.
 
 These three mechanisms add together, so we can readily compose a command to work on only modified repositories with certain branches among particular directories.
 
+For even more control, allgit offers `-i/--include` to add repos to the ones selected by the filters and `-x/--exclude` to do the opposite.
 
-Goals
------
+
+Fetch and Checkout
+------------------
+For the most part, allgit aims to be a transparent "dispatcher" for whatever git commands, aliases, or custom scripts we want to run; however there are a couple git operations it offeres to support high-level workflows.
+
+To ensure that we have current branches to filter on, `-f/--fetch` will do a fetch in each repository before checking branches or running commands.  This adds significant time, so it is an option; note that even without fetching, allgit always searches the remote branches your clone knows about.
+
+The other built-in operation is `-c/--checkout`, mentioned above, which checks out branches in order of preference in repositories that have them.
+
+Note, when testing with `--dry-run`, fetching is considered "safe" (and is necessary for showing exactly what would be done), while checkout will **not** be run, only printed.
+
+
+High-Level Goals
+----------------
 - powerful and transparent
 - easy to work with many repos as groups and subsets
 - easy to work with branches
@@ -95,12 +122,12 @@ To Do
 - docs
   - DONE: intro
   - DONE: example workflow
-  - more on branches
-  - finding and filtering
-  - -c and -f
+  - DONE: more on branches
+  - DONE: finding and filtering
+  - DONE: -c and -f
   - commands and scripts
     - other scripts in this repo
-  - tricks?  (eg printing branches with -f, shell globbing)
+  - tricks?  (eg printing branches with -f, shell globbing for fine-tuned depth control, shell aliases for custom variants, etc)
   - perhaps extended tutorial with more concrete use-cases?
   - nitty-gritty details
     - path normalization (all paths that point to the same file get normalized to the first version)
@@ -118,6 +145,7 @@ To Do
 
 - more/better error handling (catch exceptions and do something nicer with them)
   - DONE: trying to run existing script that lacks execute permission throws PermissionError
+  - DONE: just catch OSError here, too many types to catch individually
 - --abort - stop-on-error
 
 - branch workflow
@@ -127,18 +155,9 @@ To Do
 
  - `pleasemake` helper - make a target in repos where it can be easily found in the Makefile
 
-- DONE: -b/--branches to select repos with those branches
-  - NO: should this run other commands multiple times on repos with multiple matching branches?
-  - get remote names and strip exact prefixes for branch name normalization
-  - support git branch name globbing
 - -t/--tags - basically just like --branches but different mechanism
     - should this have a checkout mode too?
     - mutually exclusive with --branches?
-- DONE: -m/--modified
-- DONE: -i/--include - add extra repos after -b/t/m
-- DONE: -x/--exclude - do not work on these repos no matter what
-  - DONE: -x mustn't be fooled by foo vs. ./foo vs. foo/ vs. ../here/foo; maybe even symlinks too ...
-- DONE: --dry-run - offer a way to check that -x is protecting it's repos
 - --list - just list repositories, quoted and space-separated so you could drop them into -i/-x and get nearly full combination operations using subshell invocations
     - prolly need -q/--quiet for this
 - --exists - run the command if it can be found, for running scripts that some of your repos have versions of (pleasemake is a better way to do this, but requires makefile)
@@ -165,11 +184,6 @@ To Do
 
 - basic workflow example in --help
   - needs better argparse formatter
-
-- DONE: handle bare repos
-  - PUNT: some git commands don't work on bare, do we need to handle those differently? - no, no "special knowledge" of git commands
-  - Need a flag for "only bare"?
-    - maybe `*.git` is enough?
 
 
 ### Doneyard
@@ -217,6 +231,21 @@ To Do
     - list?
     - matching?
     - exclude?
+
+- DONE: -b/--branches to select repos with those branches
+  - NO: should this run other commands multiple times on repos with multiple matching branches?
+  - get remote names and strip exact prefixes for branch name normalization
+  - support git branch name globbing
+- DONE: -m/--modified
+- DONE: -i/--include - add extra repos after -b/t/m
+- DONE: -x/--exclude - do not work on these repos no matter what
+  - DONE: -x mustn't be fooled by foo vs. ./foo vs. foo/ vs. ../here/foo; maybe even symlinks too ...
+- DONE: --dry-run - offer a way to check that -x is protecting it's repos
+
+- DONE: handle bare repos
+  - PUNT: some git commands don't work on bare, do we need to handle those differently? - no, no "special knowledge" of git commands
+  - PUNT: Need a flag for "only bare"?
+    - YES: maybe `*.git` is enough?
 
 
 ---
