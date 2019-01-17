@@ -54,6 +54,8 @@ To Do
   - "global" branch?
 
  - `pleasemake` helper - make a target in repos where it can be easily found in the Makefile
+ - `pushpr` helper to actually create PRs from pushed branch
+ - `githubclone` helper to mass-clone github repos
 
 - -t/--tags - basically just like --branches but different mechanism
     - should this have a checkout mode too?
@@ -62,6 +64,7 @@ To Do
     - prolly need -q/--quiet for this
 - --exists - run the command if it can be found, for running scripts that some of your repos have versions of (pleasemake is a better way to do this, but requires makefile)
 - -l/--follow-symlinks - option to traverse symlinks during find_repos
+- -t/--test - filter repos by an arbitrary command or script; `ag -t test -e Makefile -- make`
 
 - format placeholders
   - PUNT: repo name? - no, can be extracted from dir
