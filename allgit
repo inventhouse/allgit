@@ -246,7 +246,7 @@ def repo_loop(repos, cmd=None, fetch=False, test_cmd=None, branches=None, checko
     xit = 0
     if errors:
         print(f"\n{tput('bold')}ERRORS:{tput('sgr0')}", file=sys.stderr)
-        for r in repos:
+        for r in repos + include_repos:
             if r not in errors:
                 continue
             print(f"\t{tput('bold')}{r}:{tput('sgr0')}", file=sys.stderr)
