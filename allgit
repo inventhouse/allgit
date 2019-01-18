@@ -163,7 +163,7 @@ def main(args, env):
         repos = [ r for r in repos if repo_changes(r) ]
 
     if my_args.branches and not my_args.fetch:
-        repos = [ r for r in repos if repo_branches(r, my_args.branches) ]  # Pre-filter for repos with the branches (repo_run will end up re-checking the branches, but that's pretty quick and I don't see a clean way to avoid that)
+        repos = [ r for r in repos if repo_branches(r, my_args.branches) ]  # Pre-filter for repos with the branches (process_repo will end up re-checking the branches, but that's pretty quick and I don't see a clean way to avoid that)
 
     if my_args.print_args:
         print(f"* Args:\n\t{my_args}\n* Command:\n\t{cmd}")
@@ -220,8 +220,8 @@ def repo_loop(repos, cmd=None, fetch=False, test_cmd=None, branches=None, checko
             continue  # Never do the same repo twice
         seen_repos.add(r)
         print_header(r)
-        ran = repo_run(r, errors, cmd=cmd, fetch=fetch, test_cmd=test_cmd, branches=branches, checkout=checkout, dry_run=dry_run)
-        if ran and script_out:
+        did = process_repo(r, errors, cmd=cmd, fetch=fetch, test_cmd=test_cmd, branches=branches, checkout=checkout, dry_run=dry_run)
+        if did and script_out:
             script_lines.append(clone_script_line(r))
 
     for r in include_repos:  # FIXME: mostly duplicated code from above :-/
@@ -229,8 +229,8 @@ def repo_loop(repos, cmd=None, fetch=False, test_cmd=None, branches=None, checko
             continue  # Never do the same repo twice
         seen_repos.add(r)
         print_header(r)
-        ran = repo_run(r, errors, cmd=cmd, fetch=fetch, dry_run=dry_run)  # "Included" repos are not subject to branch checks so omit branches and checkout (the latter doesn't apply if no branches are requested)
-        if ran and script_out:
+        did = process_repo(r, errors, cmd=cmd, fetch=fetch, dry_run=dry_run)  # "Included" repos are not subject to branch checks so omit branches and checkout (the latter doesn't apply if no branches are requested)
+        if did and script_out:
             script_lines.append(clone_script_line(r))
 
     xit = 0
@@ -263,18 +263,18 @@ def repo_loop(repos, cmd=None, fetch=False, test_cmd=None, branches=None, checko
     return xit
 
 
-def repo_run(repo, errors, cmd=None, fetch=False, test_cmd=None, branches=None, checkout=False, dry_run=False):
+def process_repo(repo, errors, cmd=None, fetch=False, test_cmd=None, branches=None, checkout=False, dry_run=False):
     "Run commands in a repo, including optional fetch, branch-check, and checkout; also print commands when appropreate."
     # FIXME: Somewhat better, but still twisty
     print_cmd = (fetch or test_cmd or checkout)  # Print "active" commands if running more than just the user command
     if fetch:
         fetch_cmd = ["git", "fetch"]
-        ok = run_collect_error(repo, fetch_cmd, errors, print_cmd=print_cmd)
+        ok = repo_run(repo, fetch_cmd, errors, print_cmd=print_cmd)
         if not ok:
             return False
 
     if test_cmd:
-        ok = run_collect_error(repo, test_cmd, print_cmd=print_cmd)  # Don't collect test failures
+        ok = repo_run(repo, test_cmd, print_cmd=print_cmd)  # Don't collect test failures
         if not ok:
             print("Skipping")
             return False
@@ -290,19 +290,19 @@ def repo_run(repo, errors, cmd=None, fetch=False, test_cmd=None, branches=None, 
 
     if checkout and found_branches:
         checkout_cmd = ["git", "checkout", found_branches[-1]]
-        ok = run_collect_error(repo, checkout_cmd, errors, print_cmd=print_cmd, dry_run=dry_run)
+        ok = repo_run(repo, checkout_cmd, errors, print_cmd=print_cmd, dry_run=dry_run)
         if not ok:
             return False
 
     if cmd:
-        ok = run_collect_error(repo, cmd, errors, print_cmd=print_cmd, dry_run=dry_run)
+        ok = repo_run(repo, cmd, errors, print_cmd=print_cmd, dry_run=dry_run)
         if not ok:
             return False
 
     return True
 
 
-def run_collect_error(r, cmd, errors=None, print_cmd=False, dry_run=False):  # FIXME: this should be repo_run, rename
+def repo_run(r, cmd, errors=None, print_cmd=False, dry_run=False):
     "Runs a command and adds any error to the errors dictionary; returns True if the command was successful."
     if dry_run:
         print(pretty_cmd(cmd, prompt=f"{tput('bold')}DRY $ {tput('sgr0')}"))
