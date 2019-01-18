@@ -32,97 +32,111 @@ def main(args, env):
     \t{_name} -h/--help"""
     description = """Run a git command in all repositories in the current directory (or those specified); can also run other scripts or commands.
     """
-    epilog = """Allgit makes working with many git repositories easier, especially keeping them all up-to-date, managing branches between them, and making changes across multiple projects.  Example workflow and more in the accompanying allgit.md or online: https://github.com/inventhouse/allgit
+    epilog = """Allgit makes working with many git repositories easier, especially keeping them all up-to-date, managing branches between them, and making changes across multiple projects.  Example workflow and more in the accompanying README.md or online: https://github.com/inventhouse/allgit
     """
-    parser = argparse.ArgumentParser(usage=usage, description=description, epilog=epilog)
-    parser.add_argument(
+    parser = argparse.ArgumentParser(usage=usage, description=description, epilog=epilog, add_help=False)
+    dirs_group = parser.add_argument_group("Positional arguments")
+    dirs_group.add_argument(
         "dirs",
         nargs="*",
         default=["."],
         metavar="DIR",
         help="Specific git repositories to work on or directories to search; defaults to the current directory.  Non-repository items are silently skipped and repositories are not searched for sub-repositories by default.",
     )
-    parser.add_argument(
-        "-b", "--branches",
-        nargs="+",
-        metavar="B",
-        help="Only work on repositories which have at least one of these branches.",
-    )
-    parser.add_argument(
-        "-f", "--fetch",
-        action="store_true",
-        help="Run 'git fetch' on each repository before checking for branches or running commands.",
-    )
-    parser.add_argument(
-        "-c", "--checkout",
-        action="store_true",
-        help="Check out the requested branches in the repos that have them, last branch found is the one checked out; has no effect if no branches are specified.",
-    )
-    parser.add_argument(
-        "-m", "--modified",
-        action="store_true",
-        help="Only work on repositories with local changes (not including untracked files).",
-    )
-    parser.add_argument(
-        "-t", "--test",
-        nargs=argparse.REMAINDER,
-        default=None,
-        metavar=("CMD", "ARG"),
-        help="Run a command to decide if each repository should be worked on; note that the command is run from inside the repo, not from the current directory.  This option must be the last allgit argument and the command must not include a bare '-' nor '--' with space on both sides.",
-    )
-    parser.add_argument(
-        "-i", "--include",
-        nargs="+",
-        default=[],
-        metavar="DIR",
-        help="Add repos in these directories after other filters have been applied.",
-    )
-    parser.add_argument(
-        "-x", "--exclude",
-        nargs="+",
-        default=[],
-        metavar="DIR",
-        help="Do not work on repos in these directories, even if they were specifically included.",
-    )
-    parser.add_argument(
+
+    search_group = parser.add_argument_group("Searching options")
+    search_group.add_argument(
         "-d", "--depth",
         type=int,
         default=1,
         metavar="D",
         help="Depth to searsh for repositories; defaults to 1, meaning repositories directly sepecified or immidiately children of DIR.",
     )
-    parser.add_argument(
+    search_group.add_argument(
         "-r", "--recursive",
         action="store_true",
         help="Search for repositories to any depth; synonym for '--depth -1 --subrepos'.",
     )
-    parser.add_argument(
+    search_group.add_argument(
         "-s", "--subrepos",
         action="store_true",
         help="Search git repositories for repositories cloned as subdirectories.",
     )
-    parser.add_argument(
+    search_group.add_argument(
+        "-i", "--include",
+        nargs="+",
+        default=[],
+        metavar="DIR",
+        help="Add repositories in these directories after other filters have been applied.",
+    )
+    search_group.add_argument(
+        "-x", "--exclude",
+        nargs="+",
+        default=[],
+        metavar="DIR",
+        help="Do not work on repositories in these directories, even if they were specifically included.",
+    )
+
+    filter_group = parser.add_argument_group("Filtering options")
+    filter_group.add_argument(
+        "-b", "--branches",
+        nargs="+",
+        metavar="B",
+        help="Only work on repositories which have at least one of these branches.",
+    )
+    filter_group.add_argument(
+        "-m", "--modified",
+        action="store_true",
+        help="Only work on repositories with local changes (not including untracked files).",
+    )
+    filter_group.add_argument(
+        "-t", "--test",
+        nargs=argparse.REMAINDER,
+        default=None,
+        help="Run a command to decide if each repository should be worked on.  Note that the command is run from inside the repository, not from the current directory.  This option must be the last allgit argument and the command must not include a bare '-' nor '--' with space on both sides.",
+    )
+
+    actions_group = parser.add_argument_group("Action options")
+    actions_group.add_argument(
+        "-f", "--fetch",
+        action="store_true",
+        help="Run 'git fetch' on each repository before checking for branches or running commands.",
+    )
+    actions_group.add_argument(
+        "-c", "--checkout",
+        action="store_true",
+        help="Check out the requested branches in the repositories that have them, the last branch found is the one checked out; has no effect if no branches are specified.",
+    )
+    actions_group.add_argument(
         "--clone-script",
         nargs="?",
         const=sys.stdout,
         metavar="SCRIPT.sh",
-        help="Generate a bash script to reproduce this group of repositories; local repos and branches will be noted in the script but elided.  When the script is run, existing repos will be skipped; bare repos will be mirrored.",
+        help="Generate a bash script to reproduce this group of repositories; local repositories and branches will be noted in the script but elided.  When the script is run, existing repositories will be skipped; bare repositories will be mirrored.",
     )
-    parser.add_argument(
+
+    helpful_group = parser.add_argument_group("Helpful options")
+    helpful_group.add_argument(
         "--dry-run",
         action="store_true",
         help="Only run non-destructive commands and print what would have been done; repositories may be fetched, but branches will not be checked out and the sepecified command will not be run.",
     )
-    parser.add_argument(
+    helpful_group.add_argument(
         "--print-args",
         action="store_true",
-        help="Print allgit arguments, command, and repos, then exit.",
+        help="Print allgit arguments, command, and repositories, then exit.",
     )
-    parser.add_argument(
-        '--version',
-        action='version',
+    helpful_group.add_argument(
+        "--version",
+        action="version",
         version='%(prog)s ' + _version,
     )
+    helpful_group.add_argument(
+        "-h", "--help",
+        action="help",
+        help="Show this help message and exit.",
+    )
+
     my_args = parser.parse_args(mine)
 
     if my_args.recursive:
