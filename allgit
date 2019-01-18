@@ -17,7 +17,7 @@ import sys
 
 ###  Main  ###
 _name = "allgit"
-_version = "v0.7"
+_version = "v0.8"
 
 def main(args, env):
     "Handle arguments, etc."
@@ -62,6 +62,13 @@ def main(args, env):
         "-m", "--modified",
         action="store_true",
         help="Only work on repositories with local changes (not including untracked files).",
+    )
+    parser.add_argument(
+        "-t", "--test",
+        nargs=argparse.REMAINDER,
+        default=None,
+        metavar=("CMD", "ARG"),
+        help="Run a command to decide if each repository should be worked on; note that the command is run from inside the repo, not from the current directory.  This option must be the last allgit argument and the command must not include a bare '-' nor '--' with space on both sides.",
     )
     parser.add_argument(
         "-i", "--include",
@@ -162,7 +169,7 @@ def main(args, env):
 
     xit = 0
     if cmd or my_args.clone_script or my_args.fetch or (my_args.branches and my_args.checkout):  # Only call run if there's something to do
-        xit = repo_loop(repos, cmd=cmd, fetch=my_args.fetch, branches=my_args.branches, checkout=my_args.checkout, dry_run=my_args.dry_run, include_repos=clean_include_repos, script_out=my_args.clone_script)
+        xit = repo_loop(repos, cmd=cmd, fetch=my_args.fetch, test_cmd=my_args.test, branches=my_args.branches, checkout=my_args.checkout, dry_run=my_args.dry_run, include_repos=clean_include_repos, script_out=my_args.clone_script)
     print(f"{tput('bold')}Done.{tput('sgr0')}")
     return xit
 
@@ -179,7 +186,7 @@ def split_args(args, delims=("--",)):
     return (before, indexes[i], after)
 
 
-def repo_loop(repos, cmd=None, fetch=False, branches=None, checkout=False, dry_run=False, include_repos=[], script_out=None):
+def repo_loop(repos, cmd=None, fetch=False, test_cmd=None, branches=None, checkout=False, dry_run=False, include_repos=[], script_out=None):
     "Run the commands in the repos, also handle clone script and errors."
     # FIXME: Somewhat better, but still twisty
     script_lines = []
@@ -199,7 +206,7 @@ def repo_loop(repos, cmd=None, fetch=False, branches=None, checkout=False, dry_r
             continue  # Never do the same repo twice
         seen_repos.add(r)
         print_header(r)
-        ran = repo_run(r, errors, cmd=cmd, fetch=fetch, branches=branches, checkout=checkout, dry_run=dry_run)
+        ran = repo_run(r, errors, cmd=cmd, fetch=fetch, test_cmd=test_cmd, branches=branches, checkout=checkout, dry_run=dry_run)
         if ran and script_out:
             script_lines.append(clone_script_line(r))
 
@@ -242,14 +249,20 @@ def repo_loop(repos, cmd=None, fetch=False, branches=None, checkout=False, dry_r
     return xit
 
 
-def repo_run(repo, errors, cmd=None, fetch=False, branches=None, checkout=False, dry_run=False):
+def repo_run(repo, errors, cmd=None, fetch=False, test_cmd=None, branches=None, checkout=False, dry_run=False):
     "Run commands in a repo, including optional fetch, branch-check, and checkout; also print commands when appropreate."
     # FIXME: Somewhat better, but still twisty
-    print_cmd = (fetch or checkout)  # Print "active" commands if running more than just the user command
+    print_cmd = (fetch or test_cmd or checkout)  # Print "active" commands if running more than just the user command
     if fetch:
         fetch_cmd = ["git", "fetch"]
         ok = run_collect_error(repo, fetch_cmd, errors, print_cmd=print_cmd)
         if not ok:
+            return False
+
+    if test_cmd:
+        ok = run_collect_error(repo, test_cmd, print_cmd=print_cmd)  # Don't collect test failures
+        if not ok:
+            print("Skipping")
             return False
 
     found_branches = None
@@ -275,7 +288,7 @@ def repo_run(repo, errors, cmd=None, fetch=False, branches=None, checkout=False,
     return True
 
 
-def run_collect_error(r, cmd, errors, print_cmd=False, dry_run=False):
+def run_collect_error(r, cmd, errors=None, print_cmd=False, dry_run=False):  # FIXME: this should be repo_run, rename
     "Runs a command and adds any error to the errors dictionary; returns True if the command was successful."
     if dry_run:
         print(pretty_cmd(cmd, prompt=f"{tput('bold')}DRY $ {tput('sgr0')}"))
@@ -290,12 +303,14 @@ def run_collect_error(r, cmd, errors, print_cmd=False, dry_run=False):
         result = sub.CompletedProcess(cmd, returncode=err.errno, stderr=err.strerror)
 
     if result.returncode != 0:
-        if r not in errors:
-            errors[r] = []
-        errors[r] += [(cmd, result),]
-        print(result.stderr.rstrip("\n"), file=sys.stderr)
-
+        if errors is not None:
+            if r not in errors:
+                errors[r] = []
+            errors[r] += [(cmd, result),]
+        if result.stderr:
+            print(result.stderr.rstrip("\n"), file=sys.stderr)
         return False
+
     return True
 
 
