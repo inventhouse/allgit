@@ -108,6 +108,11 @@ def main(args, env):
         help="Check out the requested branches in the repositories that have them, the last branch found is the one checked out; has no effect if no branches are specified.",
     )
     actions_group.add_argument(
+        "-l", "--list",
+        action="store_true",
+        help="List the repositories that were worked on at the end.",
+    )
+    actions_group.add_argument(
         "--clone-script",
         nargs="?",
         const=sys.stdout,
@@ -183,7 +188,7 @@ def main(args, env):
 
     xit = 0
     if cmd or my_args.clone_script or my_args.fetch or (my_args.branches and my_args.checkout):  # Only call run if there's something to do
-        xit = repo_loop(repos, cmd=cmd, fetch=my_args.fetch, test_cmd=my_args.test, branches=my_args.branches, checkout=my_args.checkout, dry_run=my_args.dry_run, include_repos=clean_include_repos, script_out=my_args.clone_script)
+        xit = repo_loop(repos, cmd=cmd, fetch=my_args.fetch, test_cmd=my_args.test, branches=my_args.branches, checkout=my_args.checkout, dry_run=my_args.dry_run, include_repos=clean_include_repos, script_out=my_args.clone_script, print_list=my_args.list)
     print(f"{tput('bold')}Done.{tput('sgr0')}")
     return xit
 
@@ -200,10 +205,11 @@ def split_args(args, delims=("--",)):
     return (before, indexes[i], after)
 
 
-def repo_loop(repos, cmd=None, fetch=False, test_cmd=None, branches=None, checkout=False, dry_run=False, include_repos=[], script_out=None):
+def repo_loop(repos, cmd=None, fetch=False, test_cmd=None, branches=None, checkout=False, dry_run=False, include_repos=[], script_out=None, print_list=False):
     "Run the commands in the repos, also handle clone script and errors."
     # FIXME: Somewhat better, but still twisty
     script_lines = []
+    did_repos = []
     errors = {}  # {repo: [(command, error), ...], ...}
     first_print = True
     def print_header(r):
@@ -223,6 +229,8 @@ def repo_loop(repos, cmd=None, fetch=False, test_cmd=None, branches=None, checko
         did = process_repo(r, errors, cmd=cmd, fetch=fetch, test_cmd=test_cmd, branches=branches, checkout=checkout, dry_run=dry_run)
         if did and script_out:
             script_lines.append(clone_script_line(r))
+        if did and print_list:
+            did_repos.append(r)
 
     for r in include_repos:  # FIXME: mostly duplicated code from above :-/
         if r in seen_repos:
@@ -232,6 +240,8 @@ def repo_loop(repos, cmd=None, fetch=False, test_cmd=None, branches=None, checko
         did = process_repo(r, errors, cmd=cmd, fetch=fetch, dry_run=dry_run)  # "Included" repos are not subject to branch checks so omit branches and checkout (the latter doesn't apply if no branches are requested)
         if did and script_out:
             script_lines.append(clone_script_line(r))
+        if did and print_list:
+            did_repos.append(r)
 
     xit = 0
     if errors:
@@ -259,6 +269,9 @@ def repo_loop(repos, cmd=None, fetch=False, test_cmd=None, branches=None, checko
                 f.write(script.encode("utf-8"))
                 os.chmod(script_out, 0o755)  # FIXME: This may not work on some platforms
             print("Clone script saved as {}".format(script_out))
+
+    if print_list and did_repos:
+        print(f"\n{tput('bold')}Did:{tput('sgr0')}\n{' '.join(did_repos)}")  # TODO: quote repos that contain spaces for use in other commands
 
     return xit
 
