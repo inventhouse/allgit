@@ -61,9 +61,9 @@ To Do
     - should this have a checkout mode too?
     - mutually exclusive with --branches?
 - DONE: --list - just list repositories, quoted and space-separated so you could drop them into -i/-x and get nearly full combination operations using subshell invocations
-    - quoting if there are spaces
-    - output a blank if there were no repos (may need to make the error message more clever)
-    - print this instead of "Done" so it is predictably the last line and other output can be discarded with `| tail -1`
+    - DONE: quoting if there are spaces - actually building compound calls requires re-parsing with sh -c to respect the quotes: ```$ sh -c "allgit -x `allgit -l | tail -1`"```; -x errors if nothing is given so add no-op junk  if inner allgit might not return anything: ```$ sh -c "allgit -x junk `ag -l -b foo|tail -1` --print-args"```
+    - DONE: output a blank if there were no repos (may need to make the error message more clever)
+    - DONE: print this instead of "Done" so it is predictably the last line and other output can be discarded with `| tail -1`
 - -q/--quiet - suppress extra output (what about command output of various kinds?)
 - --follow-symlinks - option to traverse symlinks during find_repos
 - DONE: -t/--test - filter repos by an arbitrary command or script; `ag -t test -e Makefile -- make`

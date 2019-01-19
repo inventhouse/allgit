@@ -181,15 +181,17 @@ def main(args, env):
             print(f"* Included Repos:\n\t{clean_include_repos}")
         return 0
 
-    if not found_repos and not clean_include_repos:
+    if not found_repos and not clean_include_repos and not my_args.list:
         return "Error: found no repositories"
-    if not repos and not clean_include_repos:
+    if not repos and not clean_include_repos and not my_args.list:
         return f"Error: found {len(set(found_repos + include_repos))} repositories but all were filtered out"  # REM: error seems harsh for things like -m which might legitimately filter all repos
 
     xit = 0
-    if cmd or my_args.clone_script or my_args.fetch or (my_args.branches and my_args.checkout):  # Only call run if there's something to do
+    if cmd or my_args.clone_script or my_args.fetch or (my_args.branches and my_args.checkout) or my_args.list:  # Only call run if there's something to do
         xit = repo_loop(repos, cmd=cmd, fetch=my_args.fetch, test_cmd=my_args.test, branches=my_args.branches, checkout=my_args.checkout, dry_run=my_args.dry_run, include_repos=clean_include_repos, script_out=my_args.clone_script, print_list=my_args.list)
-    print(f"{tput('bold')}Done.{tput('sgr0')}")
+
+    if not my_args.list:
+        print(f"{tput('bold')}Done.{tput('sgr0')}")
     return xit
 
 
@@ -270,8 +272,11 @@ def repo_loop(repos, cmd=None, fetch=False, test_cmd=None, branches=None, checko
                 os.chmod(script_out, 0o755)  # FIXME: This may not work on some platforms
             print("Clone script saved as {}".format(script_out))
 
-    if print_list and did_repos:
-        print(f"\n{tput('bold')}Did:{tput('sgr0')}\n{' '.join(did_repos)}")  # TODO: quote repos that contain spaces for use in other commands
+    if print_list:
+        if not first_print:
+            print("")  # Add a blank to separate from earlier output
+        did_quote = [ space_quote(r) for r in did_repos ]  # Note that there are still weird parsing issues for the quotes to be respected if chaining into other commands
+        print(f"{tput('bold')}Did:{tput('sgr0')}\n{' '.join(did_quote)}")  # This should be the last output if -l/--list so it can be used in other commands (and superflous output can be discarded with `| tail -1`)
 
     return xit
 
@@ -361,6 +366,14 @@ def normalize_paths(*file_lists):
 def pretty_cmd(c, prompt="$ "):
     "Format a command with a pseudo-prompt for display."
     return "{}{}".format(prompt, " ".join(c))
+
+
+def space_quote(s):
+    "Takes a string and adds quotes if it contains whitespace"
+    if re.search(r"\s", s):
+        return f"'{s}'"
+    else:
+        return s
 #####
 
 
