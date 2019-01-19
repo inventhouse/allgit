@@ -60,11 +60,14 @@ To Do
 - -t/--tags - basically just like --branches but different mechanism
     - should this have a checkout mode too?
     - mutually exclusive with --branches?
-- --list - just list repositories, quoted and space-separated so you could drop them into -i/-x and get nearly full combination operations using subshell invocations
-    - prolly need -q/--quiet for this
-- --exists - run the command if it can be found, for running scripts that some of your repos have versions of (pleasemake is a better way to do this, but requires makefile)
-- -l/--follow-symlinks - option to traverse symlinks during find_repos
-- -t/--test - filter repos by an arbitrary command or script; `ag -t test -e Makefile -- make`
+- DONE: --list - just list repositories, quoted and space-separated so you could drop them into -i/-x and get nearly full combination operations using subshell invocations
+    - quoting if there are spaces
+    - output a blank if there were no repos (may need to make the error message more clever)
+    - print this instead of "Done" so it is predictably the last line and other output can be discarded with `| tail -1`
+- -q/--quiet - suppress extra output (what about command output of various kinds?)
+- --follow-symlinks - option to traverse symlinks during find_repos
+- DONE: -t/--test - filter repos by an arbitrary command or script; `ag -t test -e Makefile -- make`
+- PUNT: --exists - run the command if it can be found, for running scripts that some of your repos have versions of (pleasemake is a better way to do this, but requires makefile) - do this with `-t test -x script.sh`
 
 - format placeholders
   - PUNT: repo name? - no, can be extracted from dir

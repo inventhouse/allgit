@@ -22,27 +22,34 @@ The allgit directory can then be added to the path and the command aliased to ma
 `alias ag='allgit'`
 
 
-Example Workflow
+Basics and Workflow
 ----------------
-First, have a look at `allgit -h` to see what the options mean.
+Allgit commands start with options that control it and how it finds and chooses repositories, a separator, and a command to run in each repo.  By default it works on all repositories immediately in the current directory, but we can filter by branches (`-b`) or locally modified (`-m`), among other things.
+
+To separate allgit's options from the command to run, we use `--` by itself, with space on both sides; allgit will take everything that follows, as-is, to be the command it should run.  Note that the commands are run _inside_ each repository, _not_ the current directory.
+
+Because we will often run git commands, we can use a single `-` as the separator instead and allgit will assume that what follows should be passed to git.  These are exactly equivalent: `allgit - pull` and `allgit -- git pull`.
 
 | Commands                                           | Notes |
 |----------------------------------------------------|-------|
-|`$ allgit -cb master - pull -r`                     | Check out the master branch and pull it up-to-date in all repositories; note the `-` between the allgit options and the git command
+|`$ allgit - pull -r`                                | Pull all repositories up-to-date; note the single `-` between allgit and the (implied-git) command
 |_(Make some changes)_                               ||
 |`$ allgit -m - status`                              | Show the status of the modified repositories
 |`$ allgit -m - checkout -b my_feature`              | Create a feature branch in modified repositories; we can now work with these repositories based on that branch
-|`$ allgit -b my_feature - commit -am "Feature!"`    | Commit the changes
-|`$ allgit -fb my_feature - rebase origin/master`    | Fetch in all repositories and rebase the feature branch from master
 |`$ allgit -b my_feature -- make test`               | Run tests; note the `--` to run a non-git command
-|`$ allgit -b my_feature - push -u origin my_feature`| Push the new feature up to make PRs
+|`$ allgit -b my_feature - commit -am "Feature!"`    | Commit the changes
+|`$ allgit -b my_feature - push -u origin my_feature`| Push the feature branch up for collaboration or review
 
 Note that this workflow is the same no matter how many repositories we have or even how many are involved in the feature changes - no repeating commands per repo!
+
+_(( create a separate file with more, and more sophisticated, example workflows, also refer reader to -h/--help here ))_
 
 
 More on Branches
 ----------------
 Branches are integral to change management in git; it turns out that feature and release branches are a very natural way to group projects that allgit should work on together.  On the flip side, allgit makes it very easy make consistent branches among related projects.
+
+_(( Does this belong as an example workflow? ))_
 
 For example, if some of our repositories need to branch for release together, we can use an earlier release branch to create the new one; first, make sure they're all on the same branch and up-to-date:
 
@@ -68,7 +75,7 @@ For example, say we have a bunch of repositories that integrate together: some h
 
 `$ allgit -cb master SpamRelease development my_feature`
 
-We can even add a ` - pull -r` to the end to pull them up-to-date after everything is on the right branch, as we did at the beginning of the example workflow above.
+We can even add a ` - pull -r` to the end to pull them up-to-date after everything is on the right branch.
 
 
 Finding and Filtering
@@ -85,16 +92,18 @@ Often, though, we want to be a bit more selective about which repos we work on. 
 
 Allgit also offers a couple git-related filters, in addition to `--branches` covered above, `--modified` (`-m`) will select only repositories with local modifications.
 
-These three mechanisms add together, so we can readily compose a command to work on only modified repositories with certain branches among particular directories.
+We can even use commands or scripts to create our own filters with `--test` (`-t`), which takes a command and based on the exit status it will work on the repository or skip it.  For example `allgit -t test -f Makefile -- make` will use `/bin/test` to check for a Makefile and, if found, make the default target.  This must be the last allgit option and will take everything up to the separator as the test command, so that command can't have a bare `-` nor `--` (if those are necessary, we can always wrap it in a script, of course.)
 
-For even more control, allgit offers `-i/--include` to add repos to the ones selected by the filters and `-x/--exclude` to do the opposite.
+These mechanisms add together, so we can readily compose a command to work on only modified repositories with certain branches among particular directories.  _(( this is awkward, trying to show that they're AND'd together ))_
+
+Finally, for even more control, allgit offers `-i/--include` to add repos to the ones selected by the filters and `-x/--exclude` to do the opposite.
 
 
 Fetch and Checkout
 ------------------
 For the most part, allgit aims to be a transparent "dispatcher" for whatever git commands, aliases, or custom scripts we want to run; however there are a couple git operations it offeres to support high-level workflows.
 
-To ensure that we have current branches to filter on, `-f/--fetch` will do a fetch in each repository before checking branches or running commands.  This adds significant time, so it is an option; note that even without fetching, allgit always searches the remote branches your clone knows about.
+To ensure that we have current branches to filter on, `-f/--fetch` will do a fetch in each repository before checking branches or running commands.  This adds significant time, so it is an option; note that even without fetching, allgit always searches the remote branches our clone knows about.
 
 The other built-in operation is `-c/--checkout`, mentioned above, which checks out branches in order of preference in repositories that have them.
 
