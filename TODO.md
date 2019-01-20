@@ -46,14 +46,14 @@ To Do
 - more/better error handling (catch exceptions and do something nicer with them)
   - DONE: trying to run existing script that lacks execute permission throws PermissionError
   - DONE: just catch OSError here, too many types to catch individually
-- --abort - stop-on-error
+- --failfast - stop-on-error
 
 - branch workflow
   - easy create, rebase, squash, push, fix, rebase, squash, push, eventually delete
     - maybe best done as a helper script?
   - "global" branch?
 
- - `pleasemake` helper - make a target in repos where it can be easily found in the Makefile
+ - `pleasemake` helper - make a target in repos where it can be easily found in the Makefile - or checkmake for use with -t?
  - `pushpr` helper to actually create PRs from pushed branch
  - `githubclone` helper to mass-clone github repos
 
@@ -71,11 +71,11 @@ To Do
 
 - format placeholders
   - PUNT: repo name? - no, can be extracted from dir
-  - repo dir
-  - repo url - good for '--clone-script' workaround
-  - branch? - is that current branch or specified branch?  one of each?
+  - PUNT: repo dir - to a helper, it's the current directory
+  - PUNT: repo url - good for '--clone-script' workaround - did --clone-script already, can ask git for this
+  - DONE: requested branch (ie last 'found branch') as $ALLGIT_BRANCH
   - uuid? (seems useful, but never actually used that)
-  - repos list? (never actually used that, maybe a "just print repos" flag/mode would be better)
+  - PUNT: repos list? (never actually used that, maybe a "just print repos" flag/mode would be better) - not fully known
   - could some / all of these be "passed" to scripts as env vars? - might make it easier to write "subcommands"
     - sentinel var scripts could check for and print usage?
 

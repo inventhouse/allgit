@@ -287,7 +287,7 @@ def process_repo(repo, errors, cmd=None, fetch=False, test_cmd=None, branches=No
     print_cmd = (fetch or test_cmd or checkout)  # Print "active" commands if running more than just the user command
     if fetch:
         fetch_cmd = ["git", "fetch"]
-        ok = repo_run(repo, fetch_cmd, errors, print_cmd=print_cmd)
+        ok = repo_run(repo, fetch_cmd, errors=errors, print_cmd=print_cmd)
         if not ok:
             return False
 
@@ -308,19 +308,23 @@ def process_repo(repo, errors, cmd=None, fetch=False, test_cmd=None, branches=No
 
     if checkout and found_branches:
         checkout_cmd = ["git", "checkout", found_branches[-1]]
-        ok = repo_run(repo, checkout_cmd, errors, print_cmd=print_cmd, dry_run=dry_run)
+        ok = repo_run(repo, checkout_cmd, errors=errors, print_cmd=print_cmd, dry_run=dry_run)
         if not ok:
             return False
 
     if cmd:
-        ok = repo_run(repo, cmd, errors, print_cmd=print_cmd, dry_run=dry_run)
+        env = None
+        if found_branches:  # Make requested branch available to the command
+            env = dict(os.environ)
+            env["ALLGIT_BRANCH"] = found_branches[-1]
+        ok = repo_run(repo, cmd, env=env, errors=errors, print_cmd=print_cmd, dry_run=dry_run)
         if not ok:
             return False
 
     return True
 
 
-def repo_run(r, cmd, errors=None, print_cmd=False, dry_run=False):
+def repo_run(r, cmd, env=None, errors=None, print_cmd=False, dry_run=False):
     "Runs a command and adds any error to the errors dictionary; returns True if the command was successful."
     if dry_run:
         print(pretty_cmd(cmd, prompt=f"{tput('bold')}DRY $ {tput('sgr0')}"))
@@ -329,7 +333,7 @@ def repo_run(r, cmd, errors=None, print_cmd=False, dry_run=False):
         print(pretty_cmd(cmd, prompt=f"{tput('bold')}$ {tput('sgr0')}"))
     try:
         sys.stdout.flush()
-        result = sub.run(cmd, cwd=r, stderr=sub.PIPE)  # Collect stderr so it can be printed at the end
+        result = sub.run(cmd, cwd=r, stderr=sub.PIPE, env=env)  # Collect stderr so it can be printed at the end
         result.stderr = result.stderr.decode("utf-8")  # Normalize stderr to string instead of bytes
     except OSError as err:  # If the command is not executable or has other issues, an error gets thrown instead of returning CP, so roll our own
         result = sub.CompletedProcess(cmd, returncode=err.errno, stderr=err.strerror)

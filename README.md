@@ -23,7 +23,7 @@ The allgit directory can then be added to the path and the command aliased to ma
 
 
 Basics and Workflow
-----------------
+-------------------
 Allgit commands start with options that control it and how it finds and chooses repositories, a separator, and a command to run in each repo.  By default it works on all repositories immediately in the current directory, but we can filter by branches (`-b`) or locally modified (`-m`), among other things.
 
 To separate allgit's options from the command to run, we use `--` by itself, with space on both sides; allgit will take everything that follows, as-is, to be the command it should run.  Note that the commands are run _inside_ each repository, _not_ the current directory.
