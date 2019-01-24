@@ -8,10 +8,20 @@ In fact, git lets us use different a different local vs. remote name for branche
 
 To describe these commands and how to use them, let's call the local, shorter, name an _alias_ for the longer remote name, and let's say that the remote name is made up of a _prefix_ and a _slug_.
 
+Assuming allgit is set up as described in [README.md](README.md), there are two more things to do, the first tells git to use the remote, "upstream", branch for push:
+
+`$ git config --global push.default upstream`
+
+The second sets the default branch prefix to match our shared branch naming convention:
+
+`$ git config --global allgit.branchprefix 'users/abc'`
+
+(This can also be overridden by setting it on particular repositories, without using `--global`, of course)
+
+
 | Commands | Notes |
 |----------|-------|
-| `git config --global allgit.branchprefix 'users/abc'` | Sets the global branch prefix, this will automatically be added to the slug with a `/`
-| _(make some changes)_ ||
+| _(start implementing a feature)_ ||
 | `$ allgit -m -- newb JIRA-123-my-feature f` | Checks out a local branch `f` and immediately pushs it (unchanged!) to `users/abc/JIRA-123-my-feature` in all repositories with local modifications (`-m`)
 | `$ allgit -b f - commit -am "WIP my feature"` | Work with the branch (`-b`) using the local alias `f`
 | `$ allgit -b f - push` | Commit and push normally
