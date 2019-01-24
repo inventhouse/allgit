@@ -1,0 +1,38 @@
+#!/bin/bash
+
+# Copyright (c) 2019 Benjamin Holt -- MIT License
+
+if [ "$1" == "-h" -o "$1" == "--help" ]; then
+    cat <<USAGE
+usage: dropb [ALIAS]      Deletes local branch ALIAS, ALIAS defaults to
+                          ALLGIT_BRANCH
+       dropb -h|--help    Print this message and exit
+USAGE
+    exit 0
+fi
+
+Alias="${1:-$ALLGIT_BRANCH}"
+if [ -z "$Alias" ]; then
+    echo "Must specify a branch directly or with allgit" >&2
+    exit 1
+fi
+
+if [ "$Alias" == "master" ]; then
+    echo "Deleting the master branch is not generally a good idea" >&2
+    exit 1
+fi
+
+Branch=`git branch --list "$Alias"`
+if [ -z "$Branch" ]; then
+    echo "$Alias: branch not found" >&2
+    exit 1
+fi
+
+if [ `git rev-parse --abbrev-ref HEAD` == "$Alias" ]; then
+    echo "Switching to branch master"
+    git checkout master  # FIXME: hardcoded default branch
+fi
+
+git branch -d "$Alias"
+
+###

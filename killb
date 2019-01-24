@@ -1,0 +1,47 @@
+#!/bin/bash
+
+# Copyright (c) 2019 Benjamin Holt -- MIT License
+
+if [ "$1" == "-h" -o "$1" == "--help" ]; then
+    cat <<USAGE
+usage: killb [ALIAS]      Deletes local branch ALIAS and its associated tracking
+                          branch, ALIAS defaults to ALLGIT_BRANCH
+       killb -h|--help    Print this message and exit
+USAGE
+    exit 0
+fi
+
+Alias="${1:-$ALLGIT_BRANCH}"
+if [ -z "$Alias" ]; then
+    echo "Must specify a branch directly or with allgit" >&2
+    exit 1
+fi
+
+if [ "$Alias" == "master" ]; then
+    echo "Deleting the master branch is not generally a good idea" >&2
+    exit 1
+fi
+
+Branch=`git branch --list "$Alias"`
+if [ -z "$Branch" ]; then
+    echo "$Alias: branch not found" >&2
+    exit 1
+fi
+
+if [ `git rev-parse --abbrev-ref HEAD` == "$Alias" ]; then
+    echo "Switching to branch master"
+    git checkout master  # FIXME: hardcoded default branch
+fi
+
+Upstream=`git rev-parse --abbrev-ref "$Alias@{upstream}" 2> /dev/null | sed -e 's:origin/::'`  # FIXME: hardcoded origin
+
+dropb "$Alias"
+
+if [ "$Upstream" ]; then
+    git push origin -d "$Upstream" && echo "Deleted upstream $Upstream" # FIXME: hardcoded origin
+fi
+
+# Extract branch-pair from git
+# git branch -vv | sed -e 's/^[* ] \([^ ][^ ]*\)  *[a-fA-F0-9][a-fA-F0-9]*  *\(\[origin\/\([^] ][^] ]*\)\]\)*.*/\1 \3/' | cut -d ' ' -f 2
+
+###
