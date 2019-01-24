@@ -47,6 +47,6 @@ if [ -z "$BranchPrefix" ]; then
 fi
 
 BranchPrefix=`echo "$BranchPrefix"  | sed -e's:/$::'`  # Trim any trailing slash to ensure isn't doubled
-echo git push -u origin "$Alias:$BranchPrefix/$Slug"  # FIXME: hard-coding origin
+git push -u origin "$Alias:$BranchPrefix/$Slug"  # FIXME: hard-coding origin
 
 ###
