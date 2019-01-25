@@ -18,7 +18,6 @@ The second sets the default branch prefix to match our shared branch naming conv
 
 (This can also be overridden by setting it on particular repositories, without using `--global`, of course)
 
-
 | Commands | Notes |
 |----------|-------|
 | _(start implementing a feature)_ ||
@@ -28,33 +27,38 @@ The second sets the default branch prefix to match our shared branch naming conv
 | _(create PRs for branches and merge them)_ | _(( Making this easier is on the to-do list ))_ |
 | `$ allgit -b f -- killb` | Check out master and delete local and remote branches
 
-_(( More here about listb, setupb, getb, dropb ))_
+In addition to `newb` and `killb`, there are a few more commands:
 
-To Do
+- `$ allgit -- listb` will show all the branches that have a different local vs. remote name (including local-only branches)
+- `$ allgit -b foo -- setupb JIRA-234-add-foobar` will push up the existing local branch `foo` (so we can separate local branch creation from pushing)
+- `$ allgit -b users/abc/JIRA-112-make-a-thing -- getb t` will check out a local branch `t` for an existing remote branch
+- `$ allgit -b t -- dropb` will delete the local branch t, but _not_ the remote branch
+
+
+_(( describe command format - slug, alias ))_
+
+_(( describe multiple-prefix support ))_
+
+_(( describe use without allgit ))_
+
+
+Goals
 -----
-- DONE: $ALLGIT_BRANCH - mechanism for helpers that expect to be on the desired branch so they can enforce that?
-
 - short "alias" local names, longer descriptive remote names
+    - workflow should be just as easy regardless of how many repos are involved
     - easy as possible to create - programmatic prefix (maybe git-config setting?), jira tix integration? slug?
     - easy-or-automatic to avoid/deal with alias conflicts
     - easy to push/create PR  (probably need access token for that?)
     - easy to clean up
     - easy to alias-checkout remote branches
 
+
+To Do
+-----
 - easy to list "alias" branches
     - DONE: `listb` - lists branches that don't match their upstream (including local branches)
     - allgit -a/--alias-branches? - run in repos with local branches that don't "match" upstream - needs to be a "pre-filter" in allgit though
     - should it include "pure local" branches? - probably
-
-- DONE: `newb` - create a local branch with short name & upstream with longer composed name
-    - DONE: need `setupb SLUG` for composing upstream name after-the-fact - need to guard for already tracking?
-- DONE: `killb` - clean up local and upstream branches
-    - DONE: need a good way to delete just local branch but with $ALLGIT_BRANCH - `dropb`?
-- DONE: `getb` - check out remote branch as alias
-
-- how to accomodate workflows that use different branch prefixes for different types, like 'bugfix/', 'feature/'?
-    - perhaps setupb should not prefix if slug contains '/'?
-    - in that case, should alias extract the last part? - yes, if getb would
 
 - `squashbranch [-c|-m message] [-p?]` - squash, re-commit with original message + squash-hashes or message + squash-hashes, force-push (pre-commit check in here somewhere?) - or maybe `squashpush` does squashbranch + extras  (Does git support precommit hook? yes, also look into https://pre-commit.com)
 
@@ -68,5 +72,17 @@ To Do
 - need an allgit utils module or something
 
 ### Doneyard
+
+- DONE: $ALLGIT_BRANCH - mechanism for helpers that expect to be on the desired branch so they can enforce that?
+
+- DONE: `newb` - create a local branch with short name & upstream with longer composed name
+    - DONE: need `setupb SLUG` for composing upstream name after-the-fact - need to guard for already tracking?
+- DONE: `killb` - clean up local and upstream branches
+    - DONE: need a good way to delete just local branch but with $ALLGIT_BRANCH - `dropb`?
+- DONE: `getb` - check out remote branch as alias
+
+- DONE: how to accomodate workflows that use different branch prefixes for different types, like 'bugfix/', 'feature/'?
+    - DONE: perhaps setupb should not prefix if slug contains '/'?
+    - DONE: in that case, should alias extract the last part? - yes, if getb would
 
 ---
