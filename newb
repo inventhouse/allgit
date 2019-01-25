@@ -17,7 +17,7 @@ if [ -z "$1" ]; then
 fi
 
 Slug="$1"
-Alias="${2:-$Slug}"
+Alias="${2:-`echo "$Slug" | sed -e 's:.*/::'`}"  # Derrive default alias from last segment of the slug
 
 Branch=`git branch --list "$Alias"`
 if [ "$Branch" ]; then

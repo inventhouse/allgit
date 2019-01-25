@@ -32,6 +32,11 @@ if [ "$Upstream" ]; then
     exit 1
 fi
 
+if `echo "$Slug" | grep "/" - > /dev/null`; then
+    git push -u origin "$Alias:$Slug"  # If slug is already prefixed, use as-is FIXME: hard-coding origin
+    exit 0
+fi
+
 : ${BranchPrefix:=`git config allgit.branchprefix`}
 if [ -z "$BranchPrefix" ]; then
     BranchPrefix=`git config user.shortname`
