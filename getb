@@ -25,9 +25,12 @@ if [ -z "$Branch" ]; then
     exit 1
 fi
 
-FoundBranch=`git branch --list --all "origin/$Branch"`
-if [ -z "$FoundBranch" ]; then  # FIXME: hardcoded origin
-    echo "origin/$Branch: branch not found" >&2
+ConfigRemote=`git config allgit.defaultremote`
+: ${AllgitRemote:=${ConfigRemote:-"origin"}}
+
+FoundBranch=`git branch --list --all "$AllgitRemote/$Branch"`
+if [ -z "$FoundBranch" ]; then
+    echo "$AllgitRemote/$Branch: branch not found" >&2
     exit 1
 fi
 
@@ -35,6 +38,6 @@ if [ -z "$Alias" ]; then
     Alias=`echo "$Branch" | sed -e 's:.*/::'`  # Derrive default alias from last segment of branch name
 fi
 
-git checkout -b "$Alias" --track "origin/$Branch"  # FIXME: hardcoded origin
+git checkout -b "$Alias" --track "$AllgitRemote/$Branch"
 
 ###

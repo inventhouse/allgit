@@ -28,17 +28,23 @@ if [ -z "$Branch" ]; then
     exit 1
 fi
 
+ConfigBranch=`git config allgit.defaultbranch`
+: ${AllgitBranch:=${ConfigBranch:-"master"}}
+
 if [ `git rev-parse --abbrev-ref HEAD` == "$Alias" ]; then
     echo "Switching to branch master"
-    git checkout master  # FIXME: hardcoded default branch
+    git checkout "$AllgitBranch"
 fi
 
-Upstream=`git rev-parse --abbrev-ref "$Alias@{upstream}" 2> /dev/null | sed -e 's:origin/::'`  # FIXME: hardcoded origin
+ConfigRemote=`git config allgit.defaultremote`
+: ${AllgitRemote:=${ConfigRemote:-"origin"}}
+
+Upstream=`git rev-parse --abbrev-ref "$Alias@{upstream}" 2> /dev/null | sed -e "s:$AllgitRemote/::"`
 
 dropb "$Alias"
 
 if [ "$Upstream" ]; then
-    git push origin -d "$Upstream" && echo "Deleted upstream $Upstream" # FIXME: hardcoded origin
+    git push "$AllgitRemote" -d "$Upstream" && echo "Deleted upstream $Upstream"
 fi
 
 # Extract branch-pair from git

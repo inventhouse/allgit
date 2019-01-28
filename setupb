@@ -26,32 +26,36 @@ if [ -z "$Branch" ]; then
     exit 1
 fi
 
-Upstream=`git rev-parse --abbrev-ref "$Alias@{upstream}" 2> /dev/null | sed -e 's:origin/::'`  # FIXME: hardcoded origin
+ConfigRemote=`git config allgit.defaultremote`
+: ${AllgitRemote:=${ConfigRemote:-"origin"}}
+
+Upstream=`git rev-parse --abbrev-ref "$Alias@{upstream}" 2> /dev/null | sed -e "s:$AllgitRemote/::"`
 if [ "$Upstream" ]; then
     echo "$Alias: already pointing to $Upstream" >&2
     exit 1
 fi
 
 if `echo "$Slug" | grep "/" - > /dev/null`; then
-    git push -u origin "$Alias:$Slug"  # If slug is already prefixed, use as-is FIXME: hard-coding origin
+    git push -u "$AllgitRemote" "$Alias:$Slug"  # If slug is already prefixed, use as-is
     exit 0
 fi
 
 : ${BranchPrefix:=`git config allgit.branchprefix`}
+PrefixMessage="change it with: git config --global allgit.branchprefix 'users/abc'"
 if [ -z "$BranchPrefix" ]; then
     BranchPrefix=`git config user.shortname`
-    echo "Using prefix $BranchPrefix/ change it with: git config --global allgit.branchprefix 'users/abc'"
+    echo "Using prefix $BranchPrefix/ $PrefixMessage"
 fi
 if [ -z "$BranchPrefix" ]; then
     BranchPrefix=`git config user.name | tr 'A-Z ' 'a-z_'`
-    echo "Using prefix $BranchPrefix/ change it with: git config --global allgit.branchprefix 'users/abc'"
+    echo "Using prefix $BranchPrefix/ $PrefixMessage"
 fi
 if [ -z "$BranchPrefix" ]; then
     BranchPrefix="$USER"
-    echo "Using prefix $BranchPrefix/ change it with: git config --global allgit.branchprefix 'users/abc'"
+    echo "Using prefix $BranchPrefix/ PrefixMessage"
 fi
 
 BranchPrefix=`echo "$BranchPrefix"  | sed -e's:/$::'`  # Trim any trailing slash to ensure isn't doubled
-git push -u origin "$Alias:$BranchPrefix/$Slug"  # FIXME: hard-coding origin
+git push -u "$AllgitRemote" "$Alias:$BranchPrefix/$Slug"
 
 ###

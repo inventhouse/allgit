@@ -11,7 +11,10 @@ USAGE
     exit 0
 fi
 
+ConfigRemote=`git config allgit.defaultremote`
+: ${AllgitRemote:=${ConfigRemote:-"origin"}}
+
 # Delete lines where the local branch matches the remote branch (ignoring ahead/behind annotations like "[origin/master: behind 86]")
-git branch -vv | sed -e '/^[* ] \([^ ][^ ]*\)  *[a-fA-F0-9][a-fA-F0-9]*  *\[origin\/\1\(:.*\)*\]/d'  # REM: for some reason, I couldn't get backrefs to work in extended re :-/  # FIXME: hardcoded 'origin/'
+git branch -vv | sed -e '/^[* ] \([^ ][^ ]*\)  *[a-fA-F0-9][a-fA-F0-9]*  *\['$AllgitRemote'\/\1\(:.*\)*\]/d'  # REM: for some reason, I couldn't get backrefs to work in extended re :-/
 
 ###
