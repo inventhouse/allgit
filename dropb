@@ -17,8 +17,11 @@ if [ -z "$Alias" ]; then
     exit 1
 fi
 
-if [ "$Alias" == "master" ]; then
-    echo "Deleting the master branch is not generally a good idea" >&2
+ConfigBranch=`git config allgit.defaultbranch`
+: ${AllgitBranch:=${ConfigBranch:-"master"}}
+
+if [ "$Alias" == "$AllgitBranch" ]; then
+    echo "Deleting the default branch $AllgitBranch is not generally a good idea" >&2
     exit 1
 fi
 
@@ -29,8 +32,8 @@ if [ -z "$Branch" ]; then
 fi
 
 if [ `git rev-parse --abbrev-ref HEAD` == "$Alias" ]; then
-    echo "Switching to branch master"
-    git checkout master  # FIXME: hardcoded default branch
+    echo "Switching to branch $AllgitBranch"
+    git checkout "$AllgitBranch" || exit 1
 fi
 
 git branch -d "$Alias"
