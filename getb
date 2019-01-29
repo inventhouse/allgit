@@ -1,0 +1,43 @@
+#!/bin/bash
+
+# Copyright (c) 2019 Benjamin Holt -- MIT License
+
+if [ "$1" == "-h" -o "$1" == "--help" ]; then
+    cat <<USAGE
+usage: getb [B] [ALIAS]    Checks out branch B as ALIAS; B defaults to
+                           ALLGIT_BRANCH, ALIAS defults to the last segment of B
+       getb -h|--help      Print this message and exit
+USAGE
+    exit 0
+fi
+
+Branch="$1"  # If both branch and alias are specified, use them
+Alias="$2"
+if [ "$#" -lt 2 ]; then  # If zero or one are specified...
+    Branch="${ALLGIT_BRANCH:-$1}"  # ...try to get branch from allgit, or assume it was given
+    if [ "$ALLGIT_BRANCH" ]; then  # If the branch came from allgit, any argument must be the alias
+        Alias="$1"
+    fi
+fi
+
+if [ -z "$Branch" ]; then
+    echo "Must specify a branch directly or with allgit" >&2
+    exit 1
+fi
+
+ConfigRemote=`git config allgit.defaultremote`
+: ${AllgitRemote:=${ConfigRemote:-"origin"}}
+
+FoundBranch=`git branch --list --all "$AllgitRemote/$Branch"`
+if [ -z "$FoundBranch" ]; then
+    echo "$AllgitRemote/$Branch: branch not found" >&2
+    exit 1
+fi
+
+if [ -z "$Alias" ]; then
+    Alias=`echo "$Branch" | sed -e 's:.*/::'`  # Derrive default alias from last segment of branch name
+fi
+
+git checkout -b "$Alias" --track "$AllgitRemote/$Branch"
+
+###

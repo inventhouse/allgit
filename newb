@@ -1,0 +1,31 @@
+#!/bin/bash
+
+# Copyright (c) 2019 Benjamin Holt -- MIT License
+
+if [ "$1" == "-h" -o "$1" == "--help" ]; then
+    cat <<USAGE
+usage: newb SLUG [ALIAS]   Creates a new git branch named ALIAS and immediately
+                           pushes it to a remote branch named prefix/SLUG
+       newb -h|--help      Print this message and exit
+USAGE
+    exit 0
+fi
+
+if [ -z "$1" ]; then
+    echo "Must specify a slug for the new branch name" >&2
+    exit 1
+fi
+
+Slug="$1"
+Alias="${2:-`echo "$Slug" | sed -e 's:.*/::'`}"  # Derrive default alias from last segment of the slug
+
+Branch=`git branch --list "$Alias"`
+if [ "$Branch" ]; then
+    echo "$Alias: branch already exists" >&2
+    exit 1
+fi
+
+git checkout -b "$Alias"
+setupb "$Slug" "$Alias"
+
+###
