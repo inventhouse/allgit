@@ -32,6 +32,7 @@ To Do
   - nitty-gritty details
     - path normalization (all paths that point to the same file get normalized to the first version)
     - symlinks are not followed by find, but are by normalizer
+- DONE: note about python versions, anaconda environments, and link to docs
 
 - more testing
   - create test assets
