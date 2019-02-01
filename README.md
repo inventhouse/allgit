@@ -9,7 +9,7 @@ It also serves as a platform for other scripts like `squashbranch`; if we can wr
 
 Setup
 -----
-Allgit expects to find Python 3.5+ in the path as `python3`; personally, I like the [Anaconda distribution](https://www.anaconda.com/download/) to bring macOS into the modern age.  Note that `python3` does _not_ have to be your default python, it just has to be installed; also, Anaconda makes working with Python 2 and 3 environments quite managible, [here is a tutorial](https://docs.anaconda.com/anaconda/navigator/tutorials/manage-environments/).
+Allgit expects to find Python 3.5+ in the path as `python3`; personally, I like the [Anaconda distribution](https://www.anaconda.com/download/) to bring macOS into the modern age.  Note that `python3` does _not_ have to be your default python, it just has to be installed; also, Anaconda makes working with Python 2 and 3 environments quite manageable, [here is a tutorial](https://docs.anaconda.com/anaconda/navigator/tutorials/manage-environments/).
 
 Although allgit is self-contained other than the Python standard library, there are also some scripts to add additional functionality, so cloning this repository is recommended so it can all be kept up-to-date:
 
