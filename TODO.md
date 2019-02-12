@@ -29,10 +29,17 @@ To Do
     - other scripts in this repo
   - tricks?  (eg printing branches with -f, shell globbing for fine-tuned depth control, shell aliases for custom variants, etc)
   - perhaps extended tutorial with more concrete use-cases?
+    - lift new feature branch from readme
+    - more on marker branches
+    - more branchflow workflows
+      - "combining" separate remote branches
+      - per-repo prefixes and working with such branches
   - nitty-gritty details
     - path normalization (all paths that point to the same file get normalized to the first version)
     - symlinks are not followed by find, but are by normalizer
 - DONE: note about python versions, anaconda environments, and link to docs
+
+- develop demo - add `help` target to makefiles
 
 - more testing
   - create test assets
@@ -58,9 +65,10 @@ To Do
  - `pushpr` helper to actually create PRs from pushed branch
  - `githubclone` helper to mass-clone github repos
 
-- -t/--tags - basically just like --branches but different mechanism
+- `-t/--tags` - basically just like --branches but different mechanism
     - should this have a checkout mode too?
     - mutually exclusive with --branches?
+- `--stashes` - like branches but for creating and applying named stashes
 - DONE: --list - just list repositories, quoted and space-separated so you could drop them into -i/-x and get nearly full combination operations using subshell invocations
     - DONE: quoting if there are spaces - actually building compound calls requires re-parsing with sh -c to respect the quotes: ```$ sh -c "allgit -x `allgit -l | tail -1`"```; -x errors if nothing is given so add no-op junk  if inner allgit might not return anything: ```$ sh -c "allgit -x junk `ag -l -b foo|tail -1` --print-args"```
     - DONE: output a blank if there were no repos (may need to make the error message more clever)
