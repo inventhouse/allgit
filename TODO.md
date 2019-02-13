@@ -62,13 +62,15 @@ To Do
   - "global" branch?
 
  - `pleasemake` helper - make a target in repos where it can be easily found in the Makefile - or checkmake for use with -t?
- - `pushpr` helper to actually create PRs from pushed branch
+ - `pushpr` helper to actually create PRs from pushed branch (or `open` the PR pages so you can add comments, reviewers, etc - linux version of `open`?)
  - `githubclone` helper to mass-clone github repos
 
 - `-t/--tags` - basically just like --branches but different mechanism
     - should this have a checkout mode too?
     - mutually exclusive with --branches?
 - `--stashes` - like branches but for creating and applying named stashes
+- `--remotes` - basically like branches, but repos that have one of those remotes
+
 - DONE: --list - just list repositories, quoted and space-separated so you could drop them into -i/-x and get nearly full combination operations using subshell invocations
     - DONE: quoting if there are spaces - actually building compound calls requires re-parsing with sh -c to respect the quotes: ```$ sh -c "allgit -x `allgit -l | tail -1`"```; -x errors if nothing is given so add no-op junk  if inner allgit might not return anything: ```$ sh -c "allgit -x junk `ag -l -b foo|tail -1` --print-args"```
     - DONE: output a blank if there were no repos (may need to make the error message more clever)

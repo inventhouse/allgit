@@ -37,7 +37,7 @@ In addition to `newb` and `killb`, there are a few more commands:
 
 _(( describe command format - slug, alias ))_
 
-_(( describe multiple-prefix support ))_
+_(( describe variable-prefix support ))_
 
 _(( describe use without allgit ))_
 
@@ -59,6 +59,9 @@ To Do
     - DONE: `listb` - lists branches that don't match their upstream (including local branches)
     - allgit -a/--alias-branches? - run in repos with local branches that don't "match" upstream - needs to be a "pre-filter" in allgit though
     - should it include "pure local" branches? - probably
+
+- explain the subtleties of ALLGIT_BRANCH and BranchFlow
+- detail the defaults and parsing behavior of the various commands (when ALLGIT_BRANCH is the alias vs. the branch, etc) - or maybe need to detail that in the -h?
 
 - `squashbranch [-c|-m message] [-p?]` - squash, re-commit with original message + squash-hashes or message + squash-hashes, force-push (pre-commit check in here somewhere?) - or maybe `squashpush` does squashbranch + extras  (Does git support precommit hook? yes, also look into https://pre-commit.com)
 
