@@ -34,6 +34,16 @@ In addition to `newb` and `killb`, there are a few more commands:
 - `$ allgit -b users/abc/JIRA-112-make-a-thing -- getb t` will check out a local branch `t` for an existing remote branch
 - `$ allgit -b t -- dropb` will delete the local branch t, but _not_ the remote branch
 
+Although allgit's distinction between git commands and others is good in many ways, as these commands become integrated into our workflow it may be useful to set up aliases that smooth that let us treat them as any other git command:
+
+    $ git config --global alias.lb '! listb'
+    $ git config --global alias.nb '! newb'
+    $ git config --global alias.gb '! getb'
+    $ git config --global alias.sb '! setupb'
+    $ git config --global alias.db '! dropb'
+    $ git config --global alias.kb '! killb'
+
+Now we can use allgit's single-dash for all the "normal" git commands and the branchflow aliases.
 
 _(( describe command format - slug, alias ))_
 
@@ -59,6 +69,11 @@ To Do
     - DONE: `listb` - lists branches that don't match their upstream (including local branches)
     - allgit -a/--alias-branches? - run in repos with local branches that don't "match" upstream - needs to be a "pre-filter" in allgit though
     - should it include "pure local" branches? - probably
+
+- DONE: git aliases for seamless integration
+- newb/getb auto-alias names should be much shorter
+    - cleverly pull initials from the slug?
+
 
 - explain the subtleties of ALLGIT_BRANCH and BranchFlow
 - detail the defaults and parsing behavior of the various commands (when ALLGIT_BRANCH is the alias vs. the branch, etc) - or maybe need to detail that in the -h?
