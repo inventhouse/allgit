@@ -17,9 +17,15 @@ Although allgit is self-contained other than the Python standard library, there 
 
 The allgit directory can then be added to the path and the command aliased to make it as easy to use as possible; add these to your `~/.bash_profile` or preferred shell's config file:
 
-`PATH=$PATH:/path/to/allgit`
+`export PATH=$PATH:/path/to/allgit`
 
 `alias ag='allgit'`
+
+If you would like to use an alternative git client, for example [hub](https://hub.github.com), you can also set this environment variable:
+
+`export ALLGIT_GIT_TOOL=hub`
+
+Note that this tool will only be used for user-specified commands, not internally, so it does not need to be full-fidelity.
 
 
 Basics and Workflow

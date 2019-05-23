@@ -17,20 +17,21 @@ import sys
 
 ###  Main  ###
 _name = "allgit"
-_version = "v0.8"
+_version = "v0.9"
 
 def main(args, env):
     "Handle arguments, etc."
+    git_tool = env.get("ALLGIT_GIT_TOOL", "git")
     mine, delim, cmd = split_args(args[1:], delims=("-", "--"))
-    if cmd and delim == "-" and cmd[0] != "git":  # Git command must be separated by '-'...
-        cmd[0:0] = ["git"]  # ...and may omit "git" which feels redundant on the command line
+    if cmd and delim == "-" and cmd[0] != git_tool:  # Git command must be separated by '-'...
+        cmd[0:0] = [git_tool]  # ...and may omit "git" which feels redundant on the command line
     # Non-git command must be separated by '--', but doesn't get anything magically added
 
     usage = f"""                                                       {_version}
-    \t{_name} [DIR ...] [options] [- [git] SUBCOMMAND]
+    \t{_name} [DIR ...] [options] [- [{git_tool}] SUBCOMMAND]
     \t{_name} [DIR ...] [options] [-- ANY COMMAND]
     \t{_name} -h/--help"""
-    description = """Run a git command in all repositories in the current directory (or those specified); can also run other scripts or commands.
+    description = f"""Run a {git_tool} command in all repositories in the current directory (or those specified); can also run other scripts or commands.
     """
     epilog = """Allgit makes working with many git repositories easier, especially keeping them all up-to-date, managing branches between them, and making changes across multiple projects.  Example workflow and more in the accompanying README.md or online: https://github.com/inventhouse/allgit
     """

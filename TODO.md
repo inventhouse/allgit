@@ -58,12 +58,15 @@ To Do
 
 - branch workflow
   - easy create, rebase, squash, push, fix, rebase, squash, push, eventually delete
-    - maybe best done as a helper script?
-  - "global" branch?
+    - maybe best done as helper scripts?
+  - NO: "global" branch?
+  - branchflow does some of this but not all
 
- - `pleasemake` helper - make a target in repos where it can be easily found in the Makefile - or checkmake for use with -t?
- - `pushpr` helper to actually create PRs from pushed branch (or `open` the PR pages so you can add comments, reviewers, etc - linux version of `open`?)
- - `githubclone` helper to mass-clone github repos
+- `pleasemake` helper - make a target in repos where it can be easily found in the Makefile - or checkmake for use with -t?
+- PUNT: use `hub` - `pushpr` helper to actually create PRs from pushed branch (or `open` the PR pages so you can add comments, reviewers, etc - linux version of `open`?)
+- `githubclone` helper to mass-clone github repos - build one of these on `hub`
+
+- DONE: `ALLGIT_GIT_TOOL` env var to swap in "alternative" git tools like hub (only change user commands; can use low-fidelity alternatives)
 
 - `-t/--tags` - basically just like --branches but different mechanism
     - should this have a checkout mode too?
