@@ -105,6 +105,7 @@ To Do
 - basic workflow example in --help
   - needs better argparse formatter
 
+- OtherGitUtils.md
 
 ### Doneyard
 

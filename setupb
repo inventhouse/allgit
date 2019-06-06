@@ -4,9 +4,9 @@
 
 if [ "$1" == "-h" -o "$1" == "--help" ]; then
     cat <<USAGE
-usage: setupb [SLUG [ALIAS]]   Pushes a local branch to a remote branch named
-                               prefix/SLUG; use once to set the upstream, then
-                               just push normally
+usage: setupb [SLUG [ALIAS]]   Pushes a local branch (ALIAS) to a remote branch
+                               named prefix/SLUG; use once to set the upstream,
+                               then just push normally
        setupb -h|--help        Print this message and exit
 USAGE
     exit 0

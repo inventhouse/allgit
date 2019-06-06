@@ -73,21 +73,23 @@ To Do
 - DONE: git aliases for seamless integration
 - newb/getb auto-alias names should be much shorter
     - cleverly pull initials from the slug?
-
+    - `$ echo "DISCO-123-do-the-thing" | sed -e 's:.*/::g' -e 's/[A-Z][A-Z]*-[0-9][0-9]*//' -e 's/^\([A-Za-z]\)[^_.-]*/\1/' -e 's/[_.-]\([A-Za-z]\)[^_.-]*/\1/g'`
+    - `$ echo "DISCO-1223-DoTheThing" | sed -e 's/[A-Z]*-[0-9]*//' | tr -d 'a-z0-9_.-' | tr 'A-Z' 'a-z'`
+`
 
 - explain the subtleties of ALLGIT_BRANCH and BranchFlow
 - detail the defaults and parsing behavior of the various commands (when ALLGIT_BRANCH is the alias vs. the branch, etc) - or maybe need to detail that in the -h?
 
 - `squashbranch [-c|-m message] [-p?]` - squash, re-commit with original message + squash-hashes or message + squash-hashes, force-push (pre-commit check in here somewhere?) - or maybe `squashpush` does squashbranch + extras  (Does git support precommit hook? yes, also look into https://pre-commit.com)
 
-- Make PRs by constructing and opening github URLs:
+- PUNT: use `hub` - Make PRs by constructing and opening github URLs:
 
     > remote: Create a pull request for 'bjh/thing' on GitHub by visiting:
     > remote:      https://github.com/inventhouse/Test/pull/new/bjh/thing
 
     - should only do this for GH-remoted repos?  What if there's a mix?  Does a GH-specific script belong in allgit?
 
-- need an allgit utils module or something
+- need an allgit utils module or something?
 
 ### Doneyard
 
