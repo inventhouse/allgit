@@ -19,7 +19,7 @@ fi
 
 Slug="$1"
 # Alias="${2:-`echo "$Slug" | sed -e 's:.*/::'`}"  # Derrive default alias from last segment of the slug
-Alias="${2:-`echo "$Slug" | sed -e 's/[A-Z]*-[0-9]*//' | tr -d 'a-z0-9_.-' | tr 'A-Z' 'a-z'`}"  # Derive default alias from UpperCaseInitials (ignoring any JIRA-123- prefix)
+Alias="${2:-`echo "$Slug" | sed -e 's:.*/::g' -e 's/[A-Z]*-[0-9]*//' | tr -d 'a-z0-9_.-' | tr 'A-Z' 'a-z'`}"  # Derive default alias from UpperCaseInitials (ignoring any JIRA-123- prefix)
 if [ -z "$Alias" ]; then
   Alias=`echo "$Slug" | sed -e 's:.*/::g' -e 's/[A-Z][A-Z]*-[0-9][0-9]*//' -e 's/^\([A-Za-z]\)[^_.-]*/\1/' -e 's/[_.-]\([A-Za-z]\)[^_.-]*/\1/g'`  # Derive default alias from dash-separated-initials (again ignoring JIRA-123-)
 fi
