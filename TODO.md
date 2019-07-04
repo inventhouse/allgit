@@ -51,16 +51,21 @@ To Do
   - add more tests as new features are added
   - test symlinks vs. find_repos vs. --exclude vs. doing the same repo twice
 
+- pylint (and rules to make pylint reasonable)
+
 - more/better error handling (catch exceptions and do something nicer with them)
   - DONE: trying to run existing script that lacks execute permission throws PermissionError
   - DONE: just catch OSError here, too many types to catch individually
 - --failfast - stop-on-error
+- search upward for .git so it works in subdirs the same way git does
 
 - branch workflow
   - easy create, rebase, squash, push, fix, rebase, squash, push, eventually delete
     - maybe best done as helper scripts?
   - NO: "global" branch?
   - branchflow does some of this but not all
+
+- zsh integration?
 
 - `pleasemake` helper - make a target in repos where it can be easily found in the Makefile - or checkmake for use with -t?
 - PUNT: use `hub` - `pushpr` helper to actually create PRs from pushed branch (or `open` the PR pages so you can add comments, reviewers, etc - linux version of `open`?)
@@ -99,8 +104,6 @@ To Do
   - env vars?
   - some combination or search path of the above?
   - helpers to set or move settings?
-
-- pylint (and rules to make pylint reasonable)
 
 - basic workflow example in --help
   - needs better argparse formatter
