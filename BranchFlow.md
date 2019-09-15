@@ -1,13 +1,16 @@
 BranchFlow
 ==========
-Quicker and easier branch workflow
+_Quicker and easier branch workflow_
 
 Working on feature or bugfix branches is very common when collaborating on code in git repositories, but adhering to best-practice naming conventions like 'users/my_name/JIRA-123-my-feature' can make working with branches tedious.  The workflow gets worse if the change involves multiple repositories, and _much_ worse if we have to juggle several branches.
 
-In fact, git lets us use different a different local vs. remote name for branches, but this feature can be arcane to use; these scripts aim to make working with well-named shared branches easier and integrate with allgit to scale across repositories.
+In fact, git lets us use a different local vs. remote name for branches, but this feature can be arcane to use; these scripts aim to make working with well-named shared branches easier and integrate with allgit to scale across repositories.
 
 To describe these commands and how to use them, let's call the local, shorter, name an _alias_ for the longer remote name, and let's say that the remote name is made up of a _prefix_ and a _slug_.
 
+
+Setup
+-----
 Assuming allgit is set up as described in [README.md](README.md), there are two more things to do, the first tells git to use the remote, "upstream", branch for push:
 
 `$ git config --global push.default upstream`
@@ -18,64 +21,72 @@ The second sets the default branch prefix to match our shared branch naming conv
 
 (This can also be overridden by setting it on particular repositories, without using `--global`, of course)
 
+
+Basics and Workflow
+-------------------
 | Commands | Notes |
 |----------|-------|
 | _(start implementing a feature)_ ||
-| `$ allgit -m -- newb JIRA-123-my-feature f` | Checks out a local branch `f` and immediately pushs it (unchanged!) to `users/abc/JIRA-123-my-feature` in all repositories with local modifications (`-m`)
-| `$ allgit -b f - commit -am "WIP my feature"` | Work with the branch (`-b`) using the local alias `f`
-| `$ allgit -b f - push` | Commit and push normally
-| _(create PRs for branches and merge them)_ | _(( Making this easier is on the to-do list ))_ |
-| `$ allgit -b f -- killb` | Check out master and delete local and remote branches
+| `$ newb JIRA-123-my-feature [alias]` | Creates a local branch `mf` (or the alias we choose) and immediately pushs it (unchanged!) to `users/abc/JIRA-123-my-feature`
+| _(Commit and push and merge normally)_ ||
+| `$ killb mf` | Check out master and delete local and remote branches
 
 In addition to `newb` and `killb`, there are a few more commands:
 
-- `$ allgit -- listb` will show all the branches that have a different local vs. remote name (including local-only branches)
-- `$ allgit -b foo -- setupb JIRA-234-add-foobar` will push up the existing local branch `foo` (so we can separate local branch creation from pushing)
-- `$ allgit -b users/abc/JIRA-112-make-a-thing -- getb t` will check out a local branch `t` for an existing remote branch
-- `$ allgit -b t -- dropb` will delete the local branch t, but _not_ the remote branch
+- `$ listb` will show all the branches that have a different local vs. remote name (including local-only branches); it also lists the current branch even if that isn't aliased
+- `$ setupb JIRA-234-add-foobar [foo]` will push up the existing local branch `foo` (or the current branch), so we can separate local branch creation from pushing.
+- `$ getb users/abc/JIRA-112-make-a-thing [alias]` will check out a local branch `mat` (or whatever alias we want) for an existing remote branch
+- `$ dropb foo` will delete the local branch `foo`, but _not_ the remote branch
 
-Although allgit's distinction between git commands and others is good in many ways, as these commands become integrated into our workflow it may be useful to set up aliases that smooth that let us treat them as any other git command:
+All of the commands print help when run with `-h`.
+
+As these commands become integrated into our workflow it may be useful to set up aliases that let us treat them as any other git command:
 
     $ git config --global alias.lb '! listb'
     $ git config --global alias.nb '! newb'
     $ git config --global alias.gb '! getb'
     $ git config --global alias.sb '! setupb'
     $ git config --global alias.db '! dropb'
-    $ git config --global alias.kb '! killb'
+    $ git config --global alias.killb '! killb'
 
-Now we can use allgit's single-dash for all the "normal" git commands and the branchflow aliases.
+This is especially useful with `allgit`, so we can now use allgit's single-dash for all the "normal" git commands as well as the branchflow aliases.
 
-_(( describe command format - slug, alias ))_
+| Commands | Notes |
+|----------|-------|
+| _(start implementing a feature)_ ||
+| `$ allgit -m - nb JIRA-123-my-feature` | Checks out a local branch `mf` and immediately pushs it (unchanged!) to `users/abc/JIRA-123-my-feature` in all repositories with local modifications (`-m`)
+| `$ allgit -b mf - commit -am "WIP my feature"` | Work with the branch (`-b`) using the local alias `mf`
+| `$ allgit -b mf - push` | Commit and push normally
+| _(create PRs for branches and merge them)_ | _([hub](https://hub.github.com) can help with that for GitHub repos)_ |
+| `$ allgit -b mf - killb` | Check out master and delete local and remote branches (`killb` gets the branch name from allgit)
 
-_(( describe variable-prefix support ))_
+As always with allgit, this workflow is the same no matter how many repositories we have or how many we are changing; the branches will be consistent, and we won't need repeat any commands.
 
-_(( describe use without allgit ))_
+
+_(( Advanced: describe variables, config, and variable-prefix support ))_
 
 
 Goals
 -----
 - short "alias" local names, longer descriptive remote names
     - workflow should be just as easy regardless of how many repos are involved
-    - easy as possible to create - programmatic prefix (maybe git-config setting?), jira tix integration? slug?
-    - easy-or-automatic to avoid/deal with alias conflicts
-    - easy to push/create PR  (probably need access token for that?)
-    - easy to clean up
-    - easy to alias-checkout remote branches
+    - easy as possible to create aliased branches
+    - easy to find working branches
+    - easy to clean up working branches
+    - easy to alias-checkout existing remote branches
 
 
 To Do
 -----
-- easy to list "alias" branches
-    - DONE: `listb` - lists branches that don't match their upstream (including local branches)
-    - allgit -a/--alias-branches? - run in repos with local branches that don't "match" upstream - needs to be a "pre-filter" in allgit though
-    - should it include "pure local" branches? - probably
+- investigate making these proper git subcommands
 
 - DONE: git aliases for seamless integration
 - newb/getb auto-alias names should be much shorter
-    - cleverly pull initials from the slug?
+    - DONE: cleverly pull initials from the slug?
     - `$ echo "DISCO-123-do-the-thing" | sed -e 's:.*/::g' -e 's/[A-Z][A-Z]*-[0-9][0-9]*//' -e 's/^\([A-Za-z]\)[^_.-]*/\1/' -e 's/[_.-]\([A-Za-z]\)[^_.-]*/\1/g'`
     - `$ echo "DISCO-1223-DoTheThing" | sed -e 's/[A-Z]*-[0-9]*//' | tr -d 'a-z0-9_.-' | tr 'A-Z' 'a-z'`
-`
+    - easy-or-automatic to avoid/deal with alias conflicts
+
 
 - explain the subtleties of ALLGIT_BRANCH and BranchFlow
 - detail the defaults and parsing behavior of the various commands (when ALLGIT_BRANCH is the alias vs. the branch, etc) - or maybe need to detail that in the -h?
@@ -91,6 +102,7 @@ To Do
 
 - need an allgit utils module or something?
 
+
 ### Doneyard
 
 - DONE: $ALLGIT_BRANCH - mechanism for helpers that expect to be on the desired branch so they can enforce that?
@@ -104,5 +116,11 @@ To Do
 - DONE: how to accomodate workflows that use different branch prefixes for different types, like 'bugfix/', 'feature/'?
     - DONE: perhaps setupb should not prefix if slug contains '/'?
     - DONE: in that case, should alias extract the last part? - yes, if getb would
+
+- DONE: easy to list "alias" branches
+    - DONE: `listb` - lists branches that don't match their upstream (including local branches)
+    - PUNT: allgit -a/--alias-branches? - run in repos with local branches that don't "match" upstream - needs to be a "pre-filter" in allgit though
+    - DONE: should it include "pure local" branches? - probably
+    - DONE: always include current branch
 
 ---

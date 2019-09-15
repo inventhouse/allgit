@@ -4,7 +4,7 @@ Allgit makes working with many git repositories easier, especially keeping them 
 
 It works regardless of where the repositories came from and without requiring any configuration, maintaining lists of repositories, setting up a "super-repository", or other additional management.
 
-It also serves as a platform for other scripts like `squashbranch`; if we can write a script that works on just one repository, allgit can run it across any number.
+It also serves as a platform for other scripts like the [BranchFlow](BranchFlow.md) collection; if we can write a script that works on just one repository, allgit can run it across any number.
 
 
 Setup
