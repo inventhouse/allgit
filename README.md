@@ -107,7 +107,7 @@ Finally, for even more control, allgit offers `-i/--include` to add repos to the
 
 Fetch and Checkout
 ------------------
-For the most part, allgit aims to be a transparent "dispatcher" for whatever git commands, aliases, or custom scripts we want to run; however there are a couple git operations it offeres to support high-level workflows.
+For the most part, allgit aims to be a transparent "dispatcher" for whatever git commands, aliases, or custom scripts we want to run; however there are a couple git operations it offers to support high-level workflows.
 
 To ensure that we have current branches to filter on, `-f/--fetch` will do a fetch in each repository before checking branches or running commands.  This adds significant time, so it is an option; note that even without fetching, allgit always searches the remote branches our clone knows about.
 

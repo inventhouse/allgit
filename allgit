@@ -51,7 +51,7 @@ def main(args, env):
         type=int,
         default=1,
         metavar="D",
-        help="Depth to searsh for repositories; defaults to 1, meaning repositories directly sepecified or immidiately children of DIR.",
+        help="Depth to search for repositories; defaults to 1, meaning repositories directly sepecified or immidiately children of DIR.",
     )
     search_group.add_argument(
         "-r", "--recursive",
