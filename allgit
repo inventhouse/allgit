@@ -10,7 +10,7 @@ import os.path
 from pathlib import PurePath
 import re
 import shutil
-import subprocess as sub  # FIXME: proper version check since sub.run is >=3.5?
+import subprocess as sub
 import sys
 #####
 
