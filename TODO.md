@@ -51,6 +51,11 @@ To Do
   - add more tests as new features are added
   - test symlinks vs. find_repos vs. --exclude vs. doing the same repo twice
 
+- maybe `-m` could be faster using these:
+  - succeeds if no staged changes: `git diff-index --cached --quiet --ignore-submodules HEAD --`
+  - succeeds if no modified files: `git diff-files --quiet --ignore-submodules`
+    - [SO reference](https://stackoverflow.com/a/5148851/12288422)
+
 - pylint (and rules to make pylint reasonable)
 
 - more/better error handling (catch exceptions and do something nicer with them)
