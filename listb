@@ -19,4 +19,8 @@ ConfigRemote=`git config allgit.defaultremote`
 # Delete lines *other than the current branch* where...
 git branch -vv | sed -e '/^  \([^ ][^ ]*\)  *[a-fA-F0-9][a-fA-F0-9]*  *\['$AllgitRemote'\/\1\(:.*\)*\]/d'  # REM: for some reason, I couldn't get backrefs to work in extended re :-/
 
+Bold=`tput bold`
+Off=`tput sgr0`
+echo "${Bold}DEPRECATED: This tool was moved${Off} https://github.com/inventhouse/bettergit"
+
 ###

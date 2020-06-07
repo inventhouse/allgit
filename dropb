@@ -38,4 +38,8 @@ fi
 
 git branch -d "$Alias"
 
+Bold=`tput bold`
+Off=`tput sgr0`
+echo "${Bold}DEPRECATED: This tool was moved${Off} https://github.com/inventhouse/bettergit"
+
 ###

@@ -51,6 +51,7 @@ To Do
   - add more tests as new features are added
   - test symlinks vs. find_repos vs. --exclude vs. doing the same repo twice
 
+- Might be a better way to test for whether something is a repo `git rev-parse --show-toplevel` (succeeds if it's a repo)
 - maybe `-m` could be faster using these:
   - succeeds if no staged changes: `git diff-index --cached --quiet --ignore-submodules HEAD --`
   - succeeds if no modified files: `git diff-files --quiet --ignore-submodules`

@@ -58,4 +58,8 @@ fi
 BranchPrefix=`echo "$BranchPrefix"  | sed -e's:/$::'`  # Trim any trailing slash to ensure isn't doubled
 git push -u "$AllgitRemote" "$Alias:$BranchPrefix/$Slug"
 
+Bold=`tput bold`
+Off=`tput sgr0`
+echo "${Bold}DEPRECATED: This tool was moved${Off} https://github.com/inventhouse/bettergit"
+
 ###

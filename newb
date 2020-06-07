@@ -33,4 +33,8 @@ fi
 git checkout -b "$Alias"
 setupb "$Slug" "$Alias"
 
+Bold=`tput bold`
+Off=`tput sgr0`
+echo "${Bold}DEPRECATED: This tool was moved${Off} https://github.com/inventhouse/bettergit"
+
 ###

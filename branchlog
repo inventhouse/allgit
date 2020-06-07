@@ -23,4 +23,8 @@ fi
 
 BranchPoint=`git merge-base "$Parent" "$BranchName"`
 git log "$BranchPoint~1..HEAD" --format=oneline --abbrev-commit  # Include branched commit
+
+Bold=`tput bold`
+Off=`tput sgr0`
+echo "${Bold}DEPRECATED: This tool was moved${Off} https://github.com/inventhouse/bettergit"
 ###
