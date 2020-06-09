@@ -58,6 +58,7 @@ To Do
   - DONE: just catch OSError here, too many types to catch individually
 - --failfast - stop-on-error
 - search upward for .git so it works in subdirs the same way git does
+  - `git rev-parse --show-toplevel` (succeeds if it's a repo)
 
 - zsh integration?
 
