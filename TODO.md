@@ -51,12 +51,6 @@ To Do
   - add more tests as new features are added
   - test symlinks vs. find_repos vs. --exclude vs. doing the same repo twice
 
-- PUNT: Might be a better way to test for whether something is a repo `git rev-parse --show-toplevel` (succeeds if it's a repo) - check-for-.git heuristic is working fine, keep in case we find a counter-example
-- PUNT: maybe `-m` could be faster using these: - again, this heuristic is working for now
-  - succeeds if no staged changes: `git diff-index --cached --quiet --ignore-submodules HEAD --`
-  - succeeds if no modified files: `git diff-files --quiet --ignore-submodules`
-    - [SO reference](https://stackoverflow.com/a/5148851/12288422)
-
 - pylint (and rules to make pylint reasonable)
 
 - more/better error handling (catch exceptions and do something nicer with them)
@@ -65,19 +59,11 @@ To Do
 - --failfast - stop-on-error
 - search upward for .git so it works in subdirs the same way git does
 
-- branch workflow
-  - easy create, rebase, squash, push, fix, rebase, squash, push, eventually delete
-    - maybe best done as helper scripts?
-  - NO: "global" branch?
-  - branchflow does some of this but not all
-
 - zsh integration?
 
 - `pleasemake` helper - make a target in repos where it can be easily found in the Makefile - or checkmake for use with -t?
 - PUNT: use `hub` - `pushpr` helper to actually create PRs from pushed branch (or `open` the PR pages so you can add comments, reviewers, etc - linux version of `open`?)
 - `githubclone` helper to mass-clone github repos - build one of these on `hub`
-
-- DONE: `ALLGIT_GIT_TOOL` env var to swap in "alternative" git tools like hub (only change user commands; can use low-fidelity alternatives)
 
 - `-t/--tags` - basically just like --branches but different mechanism
     - should this have a checkout mode too?
@@ -85,24 +71,8 @@ To Do
 - `--stashes` - like branches but for creating and applying named stashes
 - `--remotes` - basically like branches, but repos that have one of those remotes
 
-- DONE: --list - just list repositories, quoted and space-separated so you could drop them into -i/-x and get nearly full combination operations using subshell invocations
-    - DONE: quoting if there are spaces - actually building compound calls requires re-parsing with sh -c to respect the quotes: ```$ sh -c "allgit -x `allgit -l | tail -1`"```; -x errors if nothing is given so add no-op junk  if inner allgit might not return anything: ```$ sh -c "allgit -x junk `ag -l -b foo|tail -1` --print-args"```
-    - DONE: output a blank if there were no repos (may need to make the error message more clever)
-    - DONE: print this instead of "Done" so it is predictably the last line and other output can be discarded with `| tail -1`
 - -q/--quiet - suppress extra output (what about command output of various kinds?)
 - --follow-symlinks - option to traverse symlinks during find_repos
-- DONE: -t/--test - filter repos by an arbitrary command or script; `ag -t test -e Makefile -- make`
-- PUNT: --exists - run the command if it can be found, for running scripts that some of your repos have versions of (pleasemake is a better way to do this, but requires makefile) - do this with `-t test -x script.sh`
-
-- format placeholders
-  - PUNT: repo name? - no, can be extracted from dir
-  - PUNT: repo dir - to a helper, it's the current directory
-  - PUNT: repo url - good for '--clone-script' workaround - did --clone-script already, can ask git for this
-  - DONE: requested branch (ie last 'found branch') as $ALLGIT_BRANCH
-  - uuid? (seems useful, but never actually used that)
-  - PUNT: repos list? (never actually used that, maybe a "just print repos" flag/mode would be better) - not fully known
-  - could some / all of these be "passed" to scripts as env vars? - might make it easier to write "subcommands"
-    - sentinel var scripts could check for and print usage?
 
 - defaults like origin and master?  other settings like default depth?
   - "magic" tags?
@@ -177,5 +147,37 @@ To Do
   - PUNT: Need a flag for "only bare"?
     - YES: maybe `*.git` is enough?
 
+- PUNT: Might be a better way to test for whether something is a repo `git rev-parse --show-toplevel` (succeeds if it's a repo) - check-for-.git heuristic is working fine, keep in case we find a counter-example
+- PUNT: maybe `-m` could be faster using these: - again, this heuristic is working for now
+  - succeeds if no staged changes: `git diff-index --cached --quiet --ignore-submodules HEAD --`
+  - succeeds if no modified files: `git diff-files --quiet --ignore-submodules`
+    - [SO reference](https://stackoverflow.com/a/5148851/12288422)
+
+- DONE: branch workflow
+  - DONE: easy create, rebase, squash, push, fix, rebase, squash, push, eventually delete
+    - DONE: maybe best done as helper scripts?
+    - DONE: and aliases
+  - NO: "global" branch?
+  - branchflow does some of this but not all
+
+- DONE: --list - just list repositories, quoted and space-separated so you could drop them into -i/-x and get nearly full combination operations using subshell invocations
+    - DONE: quoting if there are spaces - actually building compound calls requires re-parsing with sh -c to respect the quotes: ```$ sh -c "allgit -x `allgit -l | tail -1`"```; -x errors if nothing is given so add no-op junk  if inner allgit might not return anything: ```$ sh -c "allgit -x junk `ag -l -b foo|tail -1` --print-args"```
+    - DONE: output a blank if there were no repos (may need to make the error message more clever)
+    - DONE: print this instead of "Done" so it is predictably the last line and other output can be discarded with `| tail -1`
+
+- DONE: `ALLGIT_GIT_TOOL` env var to swap in "alternative" git tools like hub (only change user commands; can use low-fidelity alternatives)
+
+- DONE: -t/--test - filter repos by an arbitrary command or script; `ag -t test -e Makefile -- make`
+- PUNT: --exists - run the command if it can be found, for running scripts that some of your repos have versions of (pleasemake is a better way to do this, but requires makefile) - do this with `-t test -x script.sh`
+
+- PUNT: format placeholders
+  - PUNT: repo name? - no, can be extracted from dir
+  - PUNT: repo dir - to a helper, it's the current directory
+  - PUNT: repo url - good for '--clone-script' workaround - did --clone-script already, can ask git for this
+  - DONE: requested branch (ie last 'found branch') as $ALLGIT_BRANCH
+  - uuid? (seems useful, but never actually used that)
+  - PUNT: repos list? (never actually used that, maybe a "just print repos" flag/mode would be better) - not fully known
+  - could some / all of these be "passed" to scripts as env vars? - might make it easier to write "subcommands"
+    - sentinel var scripts could check for and print usage?
 
 ---
