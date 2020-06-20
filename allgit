@@ -400,8 +400,8 @@ def find_repos(root, depth=1, subrepos=False):
     return sorted(repos)
 
 
-# '* master'
-# '  remotes/origin/master'
+# '* main'
+# '  remotes/origin/main'
 BRANCH_RE = re.compile(r"^\*?\s*(remotes/[^/]*/)?")  # Match the star-space or space-space and optional 'remotes/*/' prefix to be stripped from branch names; assumes remote names do not contain '/'  # REM: maybe we can get a list of actual remote names to work against
 def repo_branches(repo, branch_list=None):
     "Returns a list of branch names for repo; remote branches are reduced to their base name (stripped of remotes/origin/) and de-duped.  If a list of desired branches is provided, only those will be returned if they exist for the repo."  # FIXME: this description is a mess
