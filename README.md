@@ -4,12 +4,12 @@ Allgit makes working with many git repositories easier, especially keeping them 
 
 It works regardless of where the repositories came from and without requiring any configuration, maintaining lists of repositories, setting up a "super-repository", or other additional management.
 
-It also serves as a platform for other scripts like the [BranchFlow](BranchFlow.md) collection; if we can write a script that works on just one repository, allgit can run it across any number.
+It also serves as a platform for other scripts - if we can write a script that works on just one repository, allgit can run it across any number.
 
 
 Setup
 -----
-Allgit expects to find Python 3.6+ in the path as `python3`; personally, I like the [Anaconda distribution](https://www.anaconda.com/download/) to bring macOS into the modern age.  Note that `python3` does _not_ have to be your default python, it just has to be installed; also, Anaconda makes working with Python 2 and 3 environments quite manageable, [here is a tutorial](https://docs.anaconda.com/anaconda/navigator/tutorials/manage-environments/).
+Allgit expects to find Python 3.6+ in the path as `python3`.  Note that `python3` does _not_ have to be your default python, it just has to be installed; also, Anaconda makes working with Python 2 and 3 environments quite manageable, [here is a tutorial](https://docs.anaconda.com/anaconda/navigator/tutorials/manage-environments/).
 
 Although allgit is self-contained other than the Python standard library, there are also some scripts to add additional functionality, so cloning this repository is recommended so it can all be kept up-to-date:
 
@@ -36,6 +36,9 @@ To separate allgit's options from the command to run, we use `--` by itself, wit
 
 Because we will often run git commands, we can use a single `-` as the separator instead and allgit will assume that what follows should be passed to git.  These are exactly equivalent: `allgit - pull` and `allgit -- git pull`.
 
+
+Brief Example
+-------------
 | Commands                                           | Notes |
 |----------------------------------------------------|-------|
 |`$ allgit - pull -r`                                | Pull all repositories up-to-date; note the single `-` between allgit and the (implied-git) command
@@ -47,6 +50,8 @@ Because we will often run git commands, we can use a single `-` as the separator
 |`$ allgit -b my_feature - push -u origin my_feature`| Push the feature branch up for collaboration or review
 
 Note that this workflow is the same no matter how many repositories we have or even how many are involved in the feature changes - no repeating commands per repo!
+
+(For an even better branch workflow, check out my [BranchTools](https://github.com/inventhouse/bettergit/blob/master/BranchTools.md))
 
 _(( create a separate file with more, and more sophisticated, example workflows, also refer reader to -h/--help here ))_
 
@@ -115,5 +120,5 @@ The other built-in operation is `-c/--checkout`, mentioned above, which checks o
 
 Note, when testing with `--dry-run`, fetching is considered "safe" (and is necessary for showing exactly what would be done), while checkout will **not** be run, only printed.
 
-
+_(( Add a section for other misc goodies like `--clone-script` ))_
 ---
