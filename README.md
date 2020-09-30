@@ -121,4 +121,5 @@ The other built-in operation is `-c/--checkout`, mentioned above, which checks o
 Note, when testing with `--dry-run`, fetching is considered "safe" (and is necessary for showing exactly what would be done), while checkout will **not** be run, only printed.
 
 _(( Add a section for other misc goodies like `--clone-script` ))_
+
 ---
