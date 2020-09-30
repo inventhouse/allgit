@@ -11,7 +11,7 @@ Setup
 -----
 Allgit expects to find Python 3.6+ in the path as `python3`.  Note that `python3` does _not_ have to be your default python, it just has to be installed.
 
-Although allgit is self-contained other than the Python standard library, there are also some scripts to add additional functionality, so cloning this repository is recommended so it can all be kept up-to-date:
+Although allgit is self-contained other than the Python standard library, cloning this repository is recommended so it can all be kept up-to-date:
 
 `$ git clone https://github.com/inventhouse/allgit.git`
 
