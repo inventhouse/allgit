@@ -2,7 +2,7 @@ allgit
 ======
 Allgit makes working with many git repositories easier, especially keeping them all up-to-date, managing branches between them, and making changes across multiple projects.
 
-It works regardless of where the repositories came from and without requiring any configuration, maintaining lists of repositories, setting up a "super-repository", or other additional management.
+It works regardless of where the repositories came from and _without_ requiring any configuration - no lists of repositories to maintain, no "super-repository", nor any other additional management.
 
 It also serves as a platform for other scripts - if we can write a script that works on just one repository, allgit can run it across any number.
 
