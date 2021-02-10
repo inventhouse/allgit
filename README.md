@@ -9,15 +9,11 @@ It also serves as a platform for other scripts - if we can write a script that w
 
 Setup
 -----
-Allgit expects to find Python 3.6+ in the path as `python3`.  Note that `python3` does _not_ have to be your default python, it just has to be installed.
+_(( Is this going to be needed in a packaged world? ))_ Allgit expects to find Python 3.6+ in the path as `python3`.  Note that `python3` does _not_ have to be your default python, it just has to be installed.
 
-Although allgit is self-contained other than the Python standard library, cloning this repository is recommended so it can all be kept up-to-date:
+Simply `pip install allgit`  _(( Not actually true yet! ))_
 
-`$ git clone https://github.com/inventhouse/allgit.git`
-
-The allgit directory can then be added to the path and the command aliased to make it as easy to use as possible; add these to your `~/.bash_profile` or preferred shell's config file:
-
-`export PATH=$PATH:/path/to/allgit`
+Aliasing `allgit` to make it as easy as possible to use is also recommended; add this to your `~/.bash_profile` or preferred shell's config file:
 
 `alias ag='allgit'`
 
@@ -82,11 +78,11 @@ On the other hand, we often work with varied repositories that may branch for re
 
 Allgit's `--checkout --branches` (`-cb`) was literally made for this.  By specifying a list of branches in last-one-wins order, a single command can ensure that all the projects are coherent.
 
-For example, say we have a bunch of repositories that integrate together: some have branched for 'SpamRelease', one works from a 'development' branch, we have a feature branch across a few, and the rest should be on 'master', we could simply run:
+For example, say we have a complex group of repositories that integrate together: we have a feature branch across a few, some have branched for 'SpamRelease', many have 'main' as their primary branch, and one still uses 'master', we could simply run:
 
-`$ allgit -cb master SpamRelease development my_feature`
+`$ allgit -cb my_feature SpamRelease main master`
 
-We can even add a ` - pull -r` to the end to pull them up-to-date after everything is on the right branch.
+Allgit will check out the right branches in the projects that have them; we can even add a ` - pull -r` to the end to ensure they're all up-to-date.
 
 
 Finding and Filtering
