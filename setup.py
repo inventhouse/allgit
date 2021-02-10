@@ -3,7 +3,10 @@
 from setuptools import setup
 
 from allgit import _version
+#####
 
+
+#####
 setup(
     name="allgit",
     version=_version,
@@ -20,13 +23,14 @@ setup(
     },
     classifiers=[
         "Development Status :: 5 - Production/Stable",
-        'Environment :: Console',
-        'Intended Audience :: Developers',
-        'Operating System :: Unix',
+        "Environment :: Console",
+        "Intended Audience :: Developers",
+        "Operating System :: Unix",
         "License :: OSI Approved :: MIT License",
         "Natural Language :: English",
         "Programming Language :: Python :: 3.6",
-        'Topic :: Software Development :: Version Control',
+        "Topic :: Software Development :: Version Control",
     ],
     keywords="git",
 )
+#####
