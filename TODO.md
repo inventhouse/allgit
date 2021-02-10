@@ -51,6 +51,7 @@ To Do
   - how to unit test all this?
   - add more tests as new features are added
   - test symlinks vs. find_repos vs. --exclude vs. doing the same repo twice
+  - look into https://pypi.org/project/fixtures-git/
 
 - pylint (and rules to make pylint reasonable)
 - package for PyPI
