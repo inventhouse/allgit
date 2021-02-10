@@ -41,6 +41,11 @@ To Do
 
 - develop demo - add `help` target to makefiles
 
+- change `-cb` to first-branch-wins
+  - update README
+  - update help
+  - update both checkout and ALLGIT_BRANCH in `process_repo`
+
 - more testing
   - create test assets
   - test edge-case repos: bare, local, empty, zero-commits
