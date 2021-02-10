@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2018-2021 Benjamin Holt -- MIT License
+# Copyright (c) 2018-2019 Benjamin Holt -- MIT License
 
 """
 Lightweight tool to work with many git repositories.
@@ -193,10 +193,6 @@ def main(args, env):
 
     if not my_args.list:
         print(f"{tput('bold')}Done.{tput('sgr0')}")
-
-    print(f"{tput('bold')}WARNING:{tput('sgr0')} allgit v1.0 has been migrated to PyPI and should be installed with 'pip install allgit'; this copy is deprecated and will be removed.")
-    print(f"{tput('bold')}NOTE:{tput('sgr0')} allgit v1.0 and later REVERSES branches priority order, going forward branches will be treated as first-one-wins")
-
     return xit
 
 
