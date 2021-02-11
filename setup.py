@@ -7,11 +7,15 @@ from allgit import _version
 
 
 #####
+with open("README.md", "r") as f:
+    long_description = f.read()
+
 setup(
     name="allgit",
     version=_version,
     description="""Powerful "git multiplexer" for easily working with many repositories""",
-    long_description="FIXME: See readme for now",
+    long_description=long_description,  # FIXME: Do something better than just dumping the whole readme
+    long_description_content_type="text/markdown",
     url="https://github.com/inventhouse/allgit",
     author="Benjamin Holt",
     license="MIT",

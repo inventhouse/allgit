@@ -9,9 +9,7 @@ It also serves as a platform for other scripts - if we can write a script that w
 
 Setup
 -----
-_(( Is this going to be needed in a packaged world? ))_ Allgit expects to find Python 3.6+ in the path as `python3`.  Note that `python3` does _not_ have to be your default python, it just has to be installed.
-
-Simply `pip install allgit`  _(( Not actually true yet! ))_
+Simply `pip install allgit`
 
 Aliasing `allgit` to make it as easy as possible to use is also recommended; add this to your `~/.bash_profile` or preferred shell's config file:
 
