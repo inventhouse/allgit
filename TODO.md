@@ -37,14 +37,10 @@ To Do
   - nitty-gritty details
     - path normalization (all paths that point to the same file get normalized to the first version)
     - symlinks are not followed by find, but are by normalizer
-- DONE: note about python versions, anaconda environments, and link to docs
+  - DONE: note about python versions, anaconda environments, and link to docs
+  - Some description about allgit's philosophy and why I like it better than other solutions
 
 - develop demo - add `help` target to makefiles
-
-- change `-cb` to first-branch-wins
-  - update README
-  - update help
-  - update both checkout and ALLGIT_BRANCH in `process_repo`
 
 - more testing
   - create test assets
@@ -55,8 +51,10 @@ To Do
   - how to unit test all this?
   - add more tests as new features are added
   - test symlinks vs. find_repos vs. --exclude vs. doing the same repo twice
+  - look into https://pypi.org/project/fixtures-git/
 
 - pylint (and rules to make pylint reasonable)
+- package for PyPI
 
 - more/better error handling (catch exceptions and do something nicer with them)
   - DONE: trying to run existing script that lacks execute permission throws PermissionError
@@ -69,7 +67,7 @@ To Do
 
 - `pleasemake` helper - make a target in repos where it can be easily found in the Makefile - or checkmake for use with -t?
 - PUNT: use `hub` - `pushpr` helper to actually create PRs from pushed branch (or `open` the PR pages so you can add comments, reviewers, etc - linux version of `open`?)
-- `githubclone` helper to mass-clone github repos - build one of these on `hub`
+- PUNT: `githubclone` helper to mass-clone github repos - build one of these on `hub`
 
 - `-t/--tags` - basically just like --branches but different mechanism
     - should this have a checkout mode too?
@@ -185,5 +183,10 @@ To Do
   - PUNT: repos list? (never actually used that, maybe a "just print repos" flag/mode would be better) - not fully known
   - could some / all of these be "passed" to scripts as env vars? - might make it easier to write "subcommands"
     - sentinel var scripts could check for and print usage?
+
+- DONE: change `-cb` to first-branch-wins
+  - DONE: update README
+  - DONE: update help
+  - DONE: update both checkout and ALLGIT_BRANCH in `process_repo`
 
 ---

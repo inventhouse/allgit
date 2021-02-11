@@ -1,11 +1,6 @@
 #!/usr/bin/env python3
 # Copyright (c) 2018-2021 Benjamin Holt -- MIT License
 
-##########
-# DEPRECATED: This copy is just for backward-compatiblity, the current version is 'allgit.py'
-# THIS COPY WILL BE DELETED at some point
-##########
-
 """
 Lightweight tool to work with many git repositories.
 """
@@ -22,9 +17,9 @@ import sys
 
 ###  Main  ###
 _name = "allgit"
-_version = "v0.9"
+_version = "1.0"
 
-def main(args, env):
+def main(args=sys.argv, env=os.environ):
     "Handle arguments, etc."
     git_tool = env.get("ALLGIT_GIT_TOOL", "git")
     mine, delim, cmd = split_args(args[1:], delims=("-", "--"))
@@ -32,7 +27,7 @@ def main(args, env):
         cmd[0:0] = [git_tool]  # ...and may omit "git" which feels redundant on the command line
     # Non-git command must be separated by '--', but doesn't get anything magically added
 
-    usage = f"""                                                       {_version}
+    usage = f"""                                                      v{_version}
     \t{_name} [DIR ...] [options] [- [{git_tool}] SUBCOMMAND]
     \t{_name} [DIR ...] [options] [-- ANY COMMAND]
     \t{_name} -h/--help"""
@@ -88,7 +83,7 @@ def main(args, env):
         "-b", "--branches",
         nargs="+",
         metavar="B",
-        help="Only work on repositories which have at least one of these branches.",
+        help="Only work on repositories which have at least one of these branches; branches should be given in first-one-wins priority order.",
     )
     filter_group.add_argument(
         "-m", "--modified",
@@ -111,7 +106,7 @@ def main(args, env):
     actions_group.add_argument(
         "-c", "--checkout",
         action="store_true",
-        help="Check out the requested branches in the repositories that have them, the last branch found is the one checked out; has no effect if no branches are specified.",
+        help="Check out the requested branches in the repositories that have them; branches should be given in first-one-wins priority order.  Has no effect if no branches are specified.",
     )
     actions_group.add_argument(
         "-l", "--list",
@@ -198,10 +193,6 @@ def main(args, env):
 
     if not my_args.list:
         print(f"{tput('bold')}Done.{tput('sgr0')}")
-
-    print(f"{tput('bold')}WARNING:{tput('sgr0')} allgit v1.0 has been migrated to PyPI and should be installed with 'pip install allgit'; this copy is deprecated and will be removed.")
-    print(f"{tput('bold')}NOTE:{tput('sgr0')} allgit v1.0 and later REVERSES branches priority order, going forward branches will be treated as first-one-wins")
-
     return xit
 
 
@@ -317,7 +308,7 @@ def process_repo(repo, errors, cmd=None, fetch=False, test_cmd=None, branches=No
         print(f"Found branches: {', '.join(found_branches)}")
 
     if checkout and found_branches:
-        checkout_cmd = ["git", "checkout", found_branches[-1]]
+        checkout_cmd = ["git", "checkout", found_branches[0]]
         ok = repo_run(repo, checkout_cmd, errors=errors, print_cmd=print_cmd, dry_run=dry_run)
         if not ok:
             return False
@@ -326,7 +317,7 @@ def process_repo(repo, errors, cmd=None, fetch=False, test_cmd=None, branches=No
         env = None
         if found_branches:  # Make requested branch available to the command
             env = dict(os.environ)
-            env["ALLGIT_BRANCH"] = found_branches[-1]
+            env["ALLGIT_BRANCH"] = found_branches[0]
         ok = repo_run(repo, cmd, env=env, errors=errors, print_cmd=print_cmd, dry_run=dry_run)
         if not ok:
             return False
@@ -562,6 +553,6 @@ def tput(capname, *params):
 
 #####
 if __name__ == "__main__":
-    _xit = main(sys.argv, os.environ)  # pylint: disable=invalid-name
+    _xit = main()  # pylint: disable=invalid-name
     sys.exit(_xit)
 #####
