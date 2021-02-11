@@ -1,6 +1,11 @@
 #!/usr/bin/env python3
 # Copyright (c) 2018-2021 Benjamin Holt -- MIT License
 
+##########
+# DEPRECATED: This copy is just for backward-compatiblity, the current version is 'allgit.py'
+# THIS COPY WILL BE DELETED at some point
+##########
+
 """
 Lightweight tool to work with many git repositories.
 """
