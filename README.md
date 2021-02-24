@@ -9,7 +9,7 @@ It also serves as a platform for other scripts - if we can write a script that w
 
 Setup
 -----
-Simply `pip install allgit`
+Simply `pip3 install allgit`
 
 Aliasing `allgit` to make it as easy as possible to use is also recommended; add this to your `~/.bash_profile` or preferred shell's config file:
 
