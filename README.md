@@ -74,7 +74,7 @@ In fact, it can be useful to, judiciously, make branches for the sole purpose gr
 
 On the other hand, we often work with varied repositories that may branch for release on different schedules or come from multiple sources which may have differing branching and naming practices.
 
-Allgit's `--checkout --branches` (`-cb`) was literally made for this.  By specifying a list of branches in last-one-wins order, a single command can ensure that all the projects are coherent.
+Allgit's `--checkout --branches` (`-cb`) was literally made for this.  By specifying a list of branches in priority (first-one-wins) order, a single command can ensure that all the projects are coherent.
 
 For example, say we have a complex group of repositories that integrate together: we have a feature branch across a few, some have branched for 'SpamRelease', many have 'main' as their primary branch, and one still uses 'master', we could simply run:
 
