@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2018-2021 Benjamin Holt -- MIT License
+# Copyright (c) 2018-2026 Benjamin Holt -- MIT License
 
 """
 Lightweight tool to work with many git repositories.
@@ -18,7 +18,7 @@ import time
 
 ###  Main  ###
 _name = "allgit"
-_version = "1.0"
+_version = "1.1"
 
 def main(args=sys.argv, env=os.environ):
     "Handle arguments, etc."
@@ -126,16 +126,9 @@ def main(args=sys.argv, env=os.environ):
     retry_group.add_argument(
         "--retries",
         type=int,
-        default=0,
+        default=3,
         metavar="N",
-        help="Retry failed commands up to N times (default: 0, no retries).",
-    )
-    retry_group.add_argument(
-        "--retry-delay",
-        type=float,
-        default=3.0,
-        metavar="SECS",
-        help="Seconds to wait between retries (default: 3).",
+        help="Retry failed commands up to N times with progressive backoff (default: 3).",
     )
 
     helpful_group = parser.add_argument_group("Helpful options")
@@ -206,7 +199,7 @@ def main(args=sys.argv, env=os.environ):
 
     xit = 0
     if cmd or my_args.clone_script or my_args.fetch or (my_args.branches and my_args.checkout) or my_args.list:  # Only call run if there's something to do
-        xit = repo_loop(repos, cmd=cmd, fetch=my_args.fetch, test_cmd=my_args.test, branches=my_args.branches, checkout=my_args.checkout, dry_run=my_args.dry_run, include_repos=clean_include_repos, script_out=my_args.clone_script, print_list=my_args.list, retries=my_args.retries, retry_delay=my_args.retry_delay)
+        xit = repo_loop(repos, cmd=cmd, fetch=my_args.fetch, test_cmd=my_args.test, branches=my_args.branches, checkout=my_args.checkout, dry_run=my_args.dry_run, include_repos=clean_include_repos, script_out=my_args.clone_script, print_list=my_args.list, retries=my_args.retries)
 
     if not my_args.list:
         print(f"{tput('bold')}Done.{tput('sgr0')}")
@@ -225,7 +218,7 @@ def split_args(args, delims=("--",)):
     return (before, indexes[i], after)
 
 
-def repo_loop(repos, cmd=None, fetch=False, test_cmd=None, branches=None, checkout=False, dry_run=False, include_repos=[], script_out=None, print_list=False, retries=0, retry_delay=3.0):
+def repo_loop(repos, cmd=None, fetch=False, test_cmd=None, branches=None, checkout=False, dry_run=False, include_repos=[], script_out=None, print_list=False, retries=3):
     "Run the commands in the repos, also handle clone script and errors."
     # FIXME: Somewhat better, but still twisty
     script_lines = []
@@ -246,7 +239,7 @@ def repo_loop(repos, cmd=None, fetch=False, test_cmd=None, branches=None, checko
             continue  # Never do the same repo twice
         seen_repos.add(r)
         print_header(r)
-        did = process_repo(r, errors, cmd=cmd, fetch=fetch, test_cmd=test_cmd, branches=branches, checkout=checkout, dry_run=dry_run, retries=retries, retry_delay=retry_delay)
+        did = process_repo(r, errors, cmd=cmd, fetch=fetch, test_cmd=test_cmd, branches=branches, checkout=checkout, dry_run=dry_run, retries=retries)
         if did and script_out:
             script_lines.append(clone_script_line(r))
         if did and print_list:
@@ -257,7 +250,7 @@ def repo_loop(repos, cmd=None, fetch=False, test_cmd=None, branches=None, checko
             continue  # Never do the same repo twice
         seen_repos.add(r)
         print_header(r)
-        did = process_repo(r, errors, cmd=cmd, fetch=fetch, dry_run=dry_run, retries=retries, retry_delay=retry_delay)  # "Included" repos are not subject to branch checks so omit branches and checkout (the latter doesn't apply if no branches are requested)
+        did = process_repo(r, errors, cmd=cmd, fetch=fetch, dry_run=dry_run, retries=retries)  # "Included" repos are not subject to branch checks so omit branches and checkout (the latter doesn't apply if no branches are requested)
         if did and script_out:
             script_lines.append(clone_script_line(r))
         if did and print_list:
@@ -299,13 +292,13 @@ def repo_loop(repos, cmd=None, fetch=False, test_cmd=None, branches=None, checko
     return xit
 
 
-def process_repo(repo, errors, cmd=None, fetch=False, test_cmd=None, branches=None, checkout=False, dry_run=False, retries=0, retry_delay=3.0):
+def process_repo(repo, errors, cmd=None, fetch=False, test_cmd=None, branches=None, checkout=False, dry_run=False, retries=3):
     "Run commands in a repo, including optional fetch, branch-check, and checkout; also print commands when appropreate."
     # FIXME: Somewhat better, but still twisty
     print_cmd = (fetch or test_cmd or checkout)  # Print "active" commands if running more than just the user command
     if fetch:
         fetch_cmd = ["git", "fetch"]
-        ok = repo_run(repo, fetch_cmd, errors=errors, print_cmd=print_cmd, retries=retries, retry_delay=retry_delay)
+        ok = repo_run(repo, fetch_cmd, errors=errors, print_cmd=print_cmd, retries=retries)
         if not ok:
             return False
 
@@ -326,7 +319,7 @@ def process_repo(repo, errors, cmd=None, fetch=False, test_cmd=None, branches=No
 
     if checkout and found_branches:
         checkout_cmd = ["git", "checkout", found_branches[0]]
-        ok = repo_run(repo, checkout_cmd, errors=errors, print_cmd=print_cmd, dry_run=dry_run, retries=retries, retry_delay=retry_delay)
+        ok = repo_run(repo, checkout_cmd, errors=errors, print_cmd=print_cmd, dry_run=dry_run, retries=retries)
         if not ok:
             return False
 
@@ -335,14 +328,14 @@ def process_repo(repo, errors, cmd=None, fetch=False, test_cmd=None, branches=No
         if found_branches:  # Make requested branch available to the command
             env = dict(os.environ)
             env["ALLGIT_BRANCH"] = found_branches[0]
-        ok = repo_run(repo, cmd, env=env, errors=errors, print_cmd=print_cmd, dry_run=dry_run, retries=retries, retry_delay=retry_delay)
+        ok = repo_run(repo, cmd, env=env, errors=errors, print_cmd=print_cmd, dry_run=dry_run, retries=retries)
         if not ok:
             return False
 
     return True
 
 
-def repo_run(r, cmd, env=None, errors=None, print_cmd=False, dry_run=False, retries=0, retry_delay=3.0):
+def repo_run(r, cmd, env=None, errors=None, print_cmd=False, dry_run=False, retries=3):
     "Runs a command and adds any error to the errors dictionary; returns True if the command was successful."
     if dry_run:
         print(pretty_cmd(cmd, prompt=f"{tput('bold')}DRY $ {tput('sgr0')}"))
@@ -351,8 +344,12 @@ def repo_run(r, cmd, env=None, errors=None, print_cmd=False, dry_run=False, retr
         print(pretty_cmd(cmd, prompt=f"{tput('bold')}$ {tput('sgr0')}"))
     for attempt in range(retries + 1):
         if attempt > 0:
-            print(f"Retrying ({attempt}/{retries}) in {retry_delay:.0f}s...", file=sys.stderr)
-            time.sleep(retry_delay)
+            delay = 2 ** (attempt - 1) - 1  # 0, 1, 3, 7, 15, ...
+            if delay:
+                print(f"Retrying ({attempt}/{retries}) in {delay}s...", file=sys.stderr)
+                time.sleep(delay)
+            else:
+                print(f"Retrying ({attempt}/{retries})...", file=sys.stderr)
         try:
             sys.stdout.flush()
             result = sub.run(cmd, cwd=r, stderr=sub.PIPE, env=env)  # Collect stderr so it can be printed at the end
