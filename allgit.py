@@ -137,6 +137,13 @@ def main(args=sys.argv, env=os.environ):
         metavar="SECONDS",
         help="Backoff factor in seconds for retry delays; delays scale as SECONDS * 0, 1, 3, 7, 15, ... (default: 10).",
     )
+    retry_group.add_argument(
+        "-w", "--wait",
+        type=float,
+        default=0.0,
+        metavar="SECONDS",
+        help="Wait SECONDS between repositories to avoid triggering remote rate limits.",
+    )
 
     helpful_group = parser.add_argument_group("Helpful options")
     helpful_group.add_argument(
@@ -206,7 +213,7 @@ def main(args=sys.argv, env=os.environ):
 
     xit = 0
     if cmd or my_args.clone_script or my_args.fetch or (my_args.branches and my_args.checkout) or my_args.list:  # Only call run if there's something to do
-        xit = repo_loop(repos, cmd=cmd, fetch=my_args.fetch, test_cmd=my_args.test, branches=my_args.branches, checkout=my_args.checkout, dry_run=my_args.dry_run, include_repos=clean_include_repos, script_out=my_args.clone_script, print_list=my_args.list, retries=my_args.retries, retry_backoff=my_args.retry_backoff)
+        xit = repo_loop(repos, cmd=cmd, fetch=my_args.fetch, test_cmd=my_args.test, branches=my_args.branches, checkout=my_args.checkout, dry_run=my_args.dry_run, include_repos=clean_include_repos, script_out=my_args.clone_script, print_list=my_args.list, retries=my_args.retries, retry_backoff=my_args.retry_backoff, wait=my_args.wait)
 
     if not my_args.list:
         print(f"{tput('bold')}Done.{tput('sgr0')}")
@@ -225,7 +232,7 @@ def split_args(args, delims=("--",)):
     return (before, indexes[i], after)
 
 
-def repo_loop(repos, cmd=None, fetch=False, test_cmd=None, branches=None, checkout=False, dry_run=False, include_repos=[], script_out=None, print_list=False, retries=3, retry_backoff=10.0):
+def repo_loop(repos, cmd=None, fetch=False, test_cmd=None, branches=None, checkout=False, dry_run=False, include_repos=[], script_out=None, print_list=False, retries=3, retry_backoff=10.0, wait=0.0):
     "Run the commands in the repos, also handle clone script and errors."
     # FIXME: Somewhat better, but still twisty
     script_lines = []
@@ -244,6 +251,9 @@ def repo_loop(repos, cmd=None, fetch=False, test_cmd=None, branches=None, checko
     for r in repos:
         if r in seen_repos:
             continue  # Never do the same repo twice
+        if wait and seen_repos:
+            print(f"Wait {wait}s...", file=sys.stderr)
+            time.sleep(wait)
         seen_repos.add(r)
         print_header(r)
         did = process_repo(r, errors, cmd=cmd, fetch=fetch, test_cmd=test_cmd, branches=branches, checkout=checkout, dry_run=dry_run, retries=retries, retry_backoff=retry_backoff)
@@ -255,6 +265,9 @@ def repo_loop(repos, cmd=None, fetch=False, test_cmd=None, branches=None, checko
     for r in include_repos:  # FIXME: mostly duplicated code from above :-/
         if r in seen_repos:
             continue  # Never do the same repo twice
+        if wait and seen_repos:
+            print(f"Wait {wait}s...", file=sys.stderr)
+            time.sleep(wait)
         seen_repos.add(r)
         print_header(r)
         did = process_repo(r, errors, cmd=cmd, fetch=fetch, dry_run=dry_run, retries=retries, retry_backoff=retry_backoff)  # "Included" repos are not subject to branch checks so omit branches and checkout (the latter doesn't apply if no branches are requested)
