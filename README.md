@@ -47,7 +47,7 @@ Note that this workflow is the same no matter how many repositories we have or e
 
 (For an even better branch workflow, check out my [BranchTools](https://github.com/inventhouse/bettergit/blob/master/BranchTools.md))
 
-_(( create a separate file with more, and more sophisticated, example workflows, also refer reader to -h/--help here ))_
+_(( TODO: create a separate file with more, and more sophisticated, example workflows, also refer reader to -h/--help here ))_
 
 
 More on Branches
@@ -59,7 +59,7 @@ _(( Does this belong as an example workflow? ))_
 For example, if some of our repositories need to branch for release together, we can use an earlier release branch to create the new one; first, make sure they're all on the same branch and up-to-date:
 
 ```
-$ allgit -b past_release - checkout master
+$ allgit -b past_release - checkout main
 $ allgit -b past_release - pull
 ```
 
