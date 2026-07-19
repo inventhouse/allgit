@@ -23,6 +23,10 @@ _version = "1.1"
 def main(args=sys.argv, env=os.environ):
     "Handle arguments, etc."
     git_tool = env.get("ALLGIT_GIT_TOOL", "git")
+    retries_default = int(env.get("ALLGIT_RETRIES", 3))
+    retry_backoff_default = float(env.get("ALLGIT_RETRY_BACKOFF", 10.0))
+    reruns_default = int(env.get("ALLGIT_RERUNS", 3))
+    wait_default = float(env.get("ALLGIT_WAIT", 0.0))
     mine, delim, cmd = split_args(args[1:], delims=("-", "--"))
     if cmd and delim == "-" and cmd[0] != git_tool:  # Git command must be separated by '-'...
         cmd[0:0] = [git_tool]  # ...and may omit "git" which feels redundant on the command line
@@ -126,30 +130,30 @@ def main(args=sys.argv, env=os.environ):
     retry_group.add_argument(
         "--retries",
         type=int,
-        default=3,
+        default=retries_default,
         metavar="N",
-        help="Retry failed commands up to N times with progressive backoff (default: 3).",
+        help=f"Retry failed commands up to N times with progressive backoff (default: {retries_default}, env: ALLGIT_RETRIES).",
     )
     retry_group.add_argument(
         "--retry-backoff",
         type=float,
-        default=10.0,
+        default=retry_backoff_default,
         metavar="SECONDS",
-        help="Backoff factor in seconds for retry delays; delays scale as SECONDS * 0, 1, 3, 7, 15, ... (default: 10).",
+        help=f"Backoff factor in seconds for retry delays; delays scale as SECONDS * 0, 1, 3, 7, 15, ... (default: {retry_backoff_default}, env: ALLGIT_RETRY_BACKOFF).",
     )
     retry_group.add_argument(
         "-w", "--wait",
         type=float,
-        default=0.0,
+        default=wait_default,
         metavar="SECONDS",
-        help="Wait SECONDS between repositories to avoid triggering remote rate limits.",
+        help=f"Wait SECONDS between repositories to avoid triggering remote rate limits (default: {wait_default}, env: ALLGIT_WAIT).",
     )
     retry_group.add_argument(
         "--reruns",
         type=int,
-        default=3,
+        default=reruns_default,
         metavar="N",
-        help="Re-run all failed repos at the end of the run up to N times (default: 3).",
+        help=f"Re-run all failed repos at the end of the run up to N times (default: {reruns_default}, env: ALLGIT_RERUNS).",
     )
 
     helpful_group = parser.add_argument_group("Helpful options")
