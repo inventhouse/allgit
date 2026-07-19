@@ -114,6 +114,28 @@ The other built-in operation is `-c/--checkout`, mentioned above, which checks o
 
 Note, when testing with `--dry-run`, fetching is considered "safe" (and is necessary for showing exactly what would be done), while checkout will **not** be run, only printed.
 
+Retries
+-------
+GitHub and other hosting services have become unreliable when running remote git commands over more than a handful of repos; we used to be able to pull scores of projects up-to-date in a single run, but lately ssh connections time out right-and-left, so allgit now supports some retry options.
+
+`--retries N` will retry a failed command, such as `pull`, up to N times before giving up and moving on to the next repo; `--reruns N` will rerun over failed repos up to N times or until no repositories fail.  The combination of these greatly improves reliability over many repos, but repeatedly timing out and retrying can be slow.
+
+The default values for these options can be set with environment variables, for example:
+
+```sh
+# Set ssh timeouts to some reasonable values
+export GIT_SSH_COMMAND='ssh -o ConnectTimeout=10 -o ServerAliveInterval=5 -o ServerAliveCountMax=2'
+
+export ALLGIT_RETRIES=3
+export ALLGIT_RERUNS=5
+```
+
+There are a couple more tuning options as well, see the help documentation; find what works best for your server and workflow.
+
+> [!CAUTION]
+> Allgit remains a transparent dispatcher, it does not try to guess which errors are worth retrying and may churn on non-transient errors; be especially cognizant of idempotency when writing scripts intended to be run with allgit.
+
+
 _(( Add a section for other misc goodies like `--clone-script` ))_
 
 ---
