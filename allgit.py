@@ -23,9 +23,9 @@ _version = "1.1"
 def main(args=sys.argv, env=os.environ):
     "Handle arguments, etc."
     git_tool = env.get("ALLGIT_GIT_TOOL", "git")
-    retries_default = int(env.get("ALLGIT_RETRIES", 3))
+    retries_default = int(env.get("ALLGIT_RETRIES", 0))
     retry_backoff_default = float(env.get("ALLGIT_RETRY_BACKOFF", 10.0))
-    reruns_default = int(env.get("ALLGIT_RERUNS", 3))
+    reruns_default = int(env.get("ALLGIT_RERUNS", 0))
     wait_default = float(env.get("ALLGIT_WAIT", 0.0))
     mine, delim, cmd = split_args(args[1:], delims=("-", "--"))
     if cmd and delim == "-" and cmd[0] != git_tool:  # Git command must be separated by '-'...

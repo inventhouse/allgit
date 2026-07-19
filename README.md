@@ -28,7 +28,7 @@ Allgit commands start with options that control it and how it finds and chooses 
 
 To separate allgit's options from the command to run, we use `--` by itself, with space on both sides; allgit will take everything that follows, as-is, to be the command it should run.  Note that the commands are run _inside_ each repository, _not_ the current directory.
 
-Because we will often run git commands, we can use a single `-` as the separator instead and allgit will assume that what follows should be passed to git.  These are exactly equivalent: `allgit - pull` and `allgit -- git pull`.
+Because we will often run git commands, we can use a single `-` as the separator instead and allgit will assume that what follows should be passed to git.  These are equivalent: `allgit - pull` and `allgit -- git pull`.
 
 
 Brief Example
